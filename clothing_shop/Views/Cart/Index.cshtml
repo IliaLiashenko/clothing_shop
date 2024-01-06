@@ -1,0 +1,92 @@
+﻿@model IEnumerable<Product>
+
+    <form method="post">
+        <br />
+        <div class="backgroundWhiteBorder">
+            <div class="container row">
+                <div class="col -8">
+                    <div class="card mt-4">
+                        <div class="card-header bg-dark text-light ml-0 row container">
+                            <div class="col-6">
+                                <i class="fa fa-shopping-cart"></i> &nbsp;
+                                Shopping Cart
+                            </div>
+                            <div class="col-6 text-right">
+                                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-info btn-sm">Continue Shopping</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class=" d-none d-lg-block">
+                                <div class="row" style="color:#821f3d">
+                                    <div class="col-lg-2">
+                                    </div>
+                                    <div class="col-12 col-lg-7">
+                                        Product Details
+                                    </div>
+                                    <div class="col-12 col-lg-2">
+                                        Price
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-1">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr />
+                            @if (Model.Count() > 0)
+                            {
+                                @foreach (var obj in Model)
+                                {
+                                    <div class="row h-100">
+                                        <div class="col-4 col-md-2 text-center py-2">
+                                            <img src="@WC.ImagePath@obj.Image" class="rounded" width="100%" />
+                                        </div>
+                                        <div class="col-8 col-lg-7">
+                                            <h5>@obj.ProductName</h5>
+                                            <div style="font-size:11px;">@obj.ProductDescription</div>
+                                        </div>
+                                        <div class="col-3 col-lg-2 pt-lg-4" style="font-size:11px;">
+                                            <span style="font-size:17px;">€@obj.Price</span>
+                                        </div>
+                                        <div class="col-2 col-lg-1 p-0 pt-lg-4 text-center">
+                                            <a asp-action="Remove" asp-route-id="@obj.Id">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="23" height="26" viewBox="0 0 23 26" fill="none">
+                                                    <path d="M1.54752 4.5H21.4525L19.5434 25.5H3.45661L1.54752 4.5Z" stroke="black" />
+                                                    <path d="M11.5 8L11.5 22" stroke="black" stroke-linecap="round" />
+                                                    <path d="M6.49902 7.96881L7.37232 21.9415" stroke="black" stroke-linecap="round" />
+                                                    <path d="M16.499 8.03119L15.6257 22.0039" stroke="black" stroke-linecap="round" />
+                                                    <line x1="0.5" y1="2.5" x2="22.5" y2="2.5" stroke="black" stroke-linecap="round" />
+                                                    <mask id="path-6-inside-1_74_38" fill="white">
+                                                        <rect x="8" width="7" height="3" rx="0.5" />
+                                                    </mask>
+                                                    <rect x="8" width="7" height="3" rx="0.5" stroke="black" stroke-width="2" mask="url(#path-6-inside-1_74_38)" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <hr />
+                                }
+                            }
+                            else
+                            {
+                                <p>Cart is empty!</p>
+                            }
+                            
+                        </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col-6 col-md-3 offset-md-9">
+                                    <button type="submit" class="btn btn-success form-control ">
+                                        <span>Continue</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+
+
+    

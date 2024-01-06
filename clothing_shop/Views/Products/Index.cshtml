@@ -1,0 +1,74 @@
+﻿@model IEnumerable<clothing_shop.Models.Product>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Product list</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+@if(Model.Count() > 0){
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ProductName)
+            </th>
+            @* <th>
+            @Html.DisplayNameFor(model => model.ProductDescription)
+            </th> *@
+            <th>
+                @Html.DisplayNameFor(model => model.Price)
+            </th>
+            @* <th>
+            @Html.DisplayNameFor(model => model.Size)
+            </th>
+            <th>
+            @Html.DisplayNameFor(model => model.Image)
+            </th>
+            <th>
+            @Html.DisplayNameFor(model => model.DisplayOrder)
+            </th> *@
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ProductName)
+                </td>
+                @* <td>
+            @Html.DisplayFor(modelItem => item.ProductDescription)
+            </td> *@
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                @* <td>
+            @Html.DisplayFor(modelItem => item.Size)
+            </td>
+            <td>
+            @Html.DisplayFor(modelItem => item.Image)
+            </td>
+            <td>
+            @Html.DisplayFor(modelItem => item.DisplayOrder)
+            </td> *@
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+}
+else 
+{
+    <p>No product exist!</p>
+}
+
