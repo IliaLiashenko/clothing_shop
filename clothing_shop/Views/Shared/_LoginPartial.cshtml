@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @User.Identity?.Name
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                        Manage
+                    </a>
+                </li>
+                <li>
+                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="submit" class="dropdown-item btn btn-link text-dark">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10.0005" cy="8.125" r="3.25" stroke="black" />
+                    <circle cx="10" cy="10" r="9.5" stroke="black" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10.0002 14.25C7.52924 14.25 5.42231 15.8086 4.60892 17.9963L3.77344 17.3897C4.79407 14.9579 7.19768 13.25 10.0002 13.25C12.7517 13.25 15.1188 14.8964 16.1699 17.2578L15.3392 17.861C14.4905 15.7446 12.4199 14.25 10.0002 14.25Z" fill="black" />
+                </svg>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">
+                        Register
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Login">
+                        Login
+                    </a>
+                </li>
+            </ul>
+        </li>
+    }
+</ul>

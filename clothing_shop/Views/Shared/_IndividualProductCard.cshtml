@@ -1,0 +1,36 @@
+﻿@model clothing_shop.Models.Product
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="col-lg-3 col-md-4 pb-3 filter @Model.Category.Name.Replace(' ','_')">
+        <div class="card bg-white shadow-sm">
+            <img class="card-img-top img-fluid d-block mx-auto mb-2" src="@WC.ImagePath@Model.Image" alt="Card image cap">
+            <div class="card-body">
+                <div class="col-12">
+                    <label class="text-center">@Model.ProductName</label>
+                </div>
+                <div class="col-12">
+                    <p>@Model.ProductDescription</p>
+                </div>
+                @{
+                    int priceAsInt = (int)Model.Price;
+                }
+                <div class="col-12">
+                    <label class="price">€@priceAsInt</label>
+                </div>
+                <div class="col-12 p-1">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-dark form-control btn-sm p-2">Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

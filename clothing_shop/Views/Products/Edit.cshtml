@@ -1,0 +1,113 @@
+﻿@model clothing_shop.Models.ViewModels.ProductVM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Product</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Product.Id" />
+            <div class="form-group">
+                <label asp-for="Product.ProductName" class="control-label"></label>
+                <input asp-for="Product.ProductName" class="form-control" />
+                <span asp-validation-for="Product.ProductName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.ProductDescription" class="control-label"></label>
+                <textarea asp-for="Product.ProductDescription" class="form-control"></textarea>
+                <span asp-validation-for="Product.ProductDescription" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.Price" class="control-label"></label>
+                <input asp-for="Product.Price" class="form-control" step="0.01" value="@Model.Product.Price.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" />
+                <span asp-validation-for="Product.Price" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.Image" class="control-label"></label>
+                <div>
+                    @if(Model.Product.Id != 0)
+                    {
+                        <img src="@WC.ImagePath@Model.Product.Image" width="100%" />
+                    }
+                </div>
+                <br/>
+                <input asp-for="Product.Image" type="file" name="files" id="uploadBox" multiple data-val="false" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.DisplayOrder" class="control-label"></label>
+                <input asp-for="Product.DisplayOrder" class="form-control" />
+                <span asp-validation-for="Product.DisplayOrder" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SelectedSizeIds" class="control-label">Select Sizes</label>
+                @if (Model.SizeSelectList != null)
+                {
+                    foreach (var size in Model.SizeSelectList)
+                    {
+                        if (size != null)
+                        {
+                            <div>
+                                <input type="checkbox" name="SelectedSizeIds" value="@size.Value" class="size-checkbox" @(Model.SelectedSizeIds.Contains(int.Parse(size.Value)) ? "checked" : "") />
+                                <label>@size.Text</label>
+                                @if (Model.SelectedSizeIds.Contains(int.Parse(size.Value)))
+                                {
+                                    <input type="number" name="AvailableQuantities[@size.Value]" value="@(Model.AvailableQuantities.ContainsKey(int.Parse(size.Value)) ? Model.AvailableQuantities[int.Parse(size.Value)] : 0)" min="0" class="form-control quantity-input" />
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p>An element in SizeSelectList is null.</p>
+                        }
+                    }
+                }
+                else
+                {
+                    <p>SizeSelectList is null.</p>
+                }
+                <span asp-validation-for="SelectedSizeIds" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <label asp-for="Product.ColorsId" class="control-label"></label>
+                <select asp-for="Product.ColorsId" asp-items="@Model.ColorsSelectList" class="form-control">
+                    <option disabled selected>--Select Color--</option>
+                </select>
+                <span asp-validation-for="Product.ColorsId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.CategoryId" class="control-label"></label>
+                <select asp-for="Product.CategoryId" asp-items="@Model.CategorySelectList" class="form-control">
+                    <option disabled selected>--Select Category--</option>
+                </select>
+                <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
+            </div>
+            
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    @* <script>
+        $(document).ready(function () {
+            $('.summernote').summernote({ height: 200 });
+        });
+    </script> *@
+}
