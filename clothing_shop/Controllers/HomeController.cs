@@ -3,6 +3,7 @@ using clothing_shop.Models;
 using clothing_shop.Models.ViewModels;
 using clothing_shop.Utility;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -19,6 +20,7 @@ namespace clothing_shop.Controllers
             _db = db;
         }
 
+
         public IActionResult Index()
         {
             HomeVM homeVM = new HomeVM()
@@ -28,7 +30,7 @@ namespace clothing_shop.Controllers
             };
             return View(homeVM);
         }
-        
+
         public IActionResult Main()
         {
             
@@ -44,39 +46,41 @@ namespace clothing_shop.Controllers
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
 
+            var sizes = _db.ProductSizes
+                            .Where(ps => ps.ProductId == Id)
+                            .Select(ps => new SelectListItem { Value = ps.SizeId.ToString(), Text = ps.Size.Name })
+                            .ToList();
 
             DetailsVM DetailsVM = new DetailsVM()
             {
                 Product = _db.Product.Include(u => u.Category).Where(u => u.Id == Id).FirstOrDefault(),
-                ExistsInCart = false
+                ExistsInCart = shoppingCartList.Any(item => item.ProductId == Id),
+                SizeSelectList = new SelectList(sizes, "Value", "Text")
             };
-
-
-            foreach (var item in shoppingCartList)
-            {
-                if (item.ProductId == Id)
-                {
-                    DetailsVM.ExistsInCart = true;
-                }
-            }
 
             return View(DetailsVM);
         }
 
-        [HttpPost,ActionName("Details")]
-        public IActionResult DetailsPost(int Id)
+
+        [HttpPost, ActionName("Details")]
+        public IActionResult DetailsPost(DetailsVM model)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null 
+
+            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
                 && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
             {
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
-            shoppingCartList.Add(new ShoppingCart { ProductId = Id });
+
+            // Добавляем выбранный размер и количество
+            shoppingCartList.Add(new ShoppingCart { ProductId = model.Product.Id, SizeId = model.SelectedSizeId, Quantity = model.Quantity });
+
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
 
             return RedirectToAction(nameof(Index));
         }
+
 
         public IActionResult RemoveFromCart(int Id)
         {

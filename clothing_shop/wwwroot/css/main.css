@@ -1,0 +1,60 @@
+﻿html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    background-image: url('/images/back_ver.jpg');
+    background-size: cover;
+    background-position: center;
+    /* background: black; */
+}
+
+.background-container {
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column; /* Изменено на вертикальное расположение элементов */
+    align-items: flex-end; /* Контент выровнен по правому краю */
+}
+
+.content {
+    padding: 20px;
+    text-align: right;
+    /* margin-top: 7%;
+            margin-right: 5%; */
+}
+
+.main-text {
+    font-size: 48px;
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 400;
+    word-wrap: break-word;
+    color: white;
+}
+
+.transparent-button {
+    background-color: transparent;
+    color: white;
+    font-size: 18px;
+    font-family: 'Libre Bodoni', serif;
+    padding: 6px 20px;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    margin-top: 10px; /* Добавлен отступ сверху */
+}
+
+    .transparent-button:hover {
+        background-color: white;
+        color: black;
+    }

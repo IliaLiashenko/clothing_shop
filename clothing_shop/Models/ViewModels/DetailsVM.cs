@@ -1,4 +1,7 @@
-﻿namespace clothing_shop.Models.ViewModels
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+
+namespace clothing_shop.Models.ViewModels
 {
     public class DetailsVM
     {
@@ -8,5 +11,13 @@
         }
         public Product Product { get; set; }
         public bool ExistsInCart { get; set; }
+
+        [Display(Name = "Size")]
+        public int SelectedSizeId { get; set; }
+
+        [Display(Name = "Quantity")]
+        public int Quantity { get; set; }
+
+        public IEnumerable<SelectListItem> SizeSelectList { get; set; }
     }
 }

@@ -17,7 +17,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Main">Caligula_shop</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Caligula_shop</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -66,22 +66,7 @@
                                 </a>
                             }
                         </li>
-                        @* <li>
-                            <div class="nav-link">
-                                
-                                @foreach (var category in Model.Categories)
-                                {
-                                    if (category.Name == "Unisex")
-                                    {
-                                        continue;
-                                    }
-                                    <span class=" filter-button" data-filter="@category.Name.Replace(' ', '_')">
-                                        @category.Name
-                                    </span>
-                                    
-                                }
-                            </div>
-                        </li> *@
+                        
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
