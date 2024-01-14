@@ -42,23 +42,15 @@
                                         <div class="col-8 col-lg-7">
                                             <h5>@obj.ProductName</h5>
                                             <div style="font-size:11px;">@obj.ProductDescription</div>
+
                                         </div>
-                                        <div class="col-3 col-lg-2 pt-lg-4" style="font-size:11px;">
-                                            <span style="font-size:17px;">€@obj.Price</span>
-                                        </div>
+                                    <div class="col-3 col-lg-2 pt-lg-4" style="font-size:11px;">
+                                        <span style="font-size:17px;">€@obj.Price</span>
+                                    </div>
+
                                         <div class="col-2 col-lg-1 p-0 pt-lg-4 text-center">
                                             <a asp-action="Remove" asp-route-id="@obj.Id">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="23" height="26" viewBox="0 0 23 26" fill="none">
-                                                    <path d="M1.54752 4.5H21.4525L19.5434 25.5H3.45661L1.54752 4.5Z" stroke="black" />
-                                                    <path d="M11.5 8L11.5 22" stroke="black" stroke-linecap="round" />
-                                                    <path d="M6.49902 7.96881L7.37232 21.9415" stroke="black" stroke-linecap="round" />
-                                                    <path d="M16.499 8.03119L15.6257 22.0039" stroke="black" stroke-linecap="round" />
-                                                    <line x1="0.5" y1="2.5" x2="22.5" y2="2.5" stroke="black" stroke-linecap="round" />
-                                                    <mask id="path-6-inside-1_74_38" fill="white">
-                                                        <rect x="8" width="7" height="3" rx="0.5" />
-                                                    </mask>
-                                                    <rect x="8" width="7" height="3" rx="0.5" stroke="black" stroke-width="2" mask="url(#path-6-inside-1_74_38)" />
-                                                </svg>
+                                                Delete
                                             </a>
                                         </div>
                                     </div>

@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using clothing_shop.Data;
 using clothing_shop.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace clothing_shop.Controllers
 {
+    [Authorize(Roles = WC.AdminRole)]
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;

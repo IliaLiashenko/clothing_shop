@@ -9,34 +9,61 @@
 <div>
     <h4>Product</h4>
     <hr />
+    <img src="@WC.ImagePath@Model.Image" alt="Product Image" width="20%" />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ProductName)
+            Product Name
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.ProductName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ProductDescription)
+            Description
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.ProductDescription)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
+            Price
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Price)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DisplayOrder)
+        <dt class="col-sm-2">
+            Category
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Category.Name)
+        </dd>
+        
+        <dt class="col-sm-2">
+            Color
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Colors.Name)
+        </dd>
+        <dt class="col-sm-2">
+            Sizes
+        </dt>
+        <dd class="col-sm-10">
+            <ul>
+                @foreach (var productSize in Model.ProductSizes)
+                {
+                    <li>@productSize.Size.Name - Quantity: @productSize.AvailableQuantity</li>
+                }
+            </ul>
+        </dd>
+        <dt class="col-sm-2">
+            Display Order
+        </dt>
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.DisplayOrder)
         </dd>
     </dl>
+    
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
+

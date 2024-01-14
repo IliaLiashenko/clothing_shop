@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace clothing_shop.Controllers
 {
-    //[Authorize(Roles = WC.AdminRole)]
+    [Authorize(Roles = WC.AdminRole)]
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -41,6 +41,10 @@ namespace clothing_shop.Controllers
             }
 
             var product = await _context.Product
+                .Include(p => p.Category)
+                .Include(p => p.Colors)
+                .Include(p => p.ProductSizes)
+            .ThenInclude(ps => ps.Size)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {

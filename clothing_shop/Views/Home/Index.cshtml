@@ -37,9 +37,8 @@
                     $('.filter').show('1000');
                 }
                 else {
-                    $(".filter").not('.' + value).hide('3000');
-                    $('.filter').filter('.' + value).show('3000');
-
+                    $('.filter.' + value + ', .filter.Unisex').show('3000');
+                    $('.filter').not('.' + value + ', .filter.Unisex').hide('3000');
                 }
             });
 

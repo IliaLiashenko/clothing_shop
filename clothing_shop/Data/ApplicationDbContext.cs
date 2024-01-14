@@ -17,6 +17,9 @@ namespace clothing_shop.Data
         public DbSet<Size> Size { get; set; } = default!;
         public DbSet<Colors> Colors { get; set; } = default!;
         public DbSet<ProductSize> ProductSizes { get; set; } = default!;
+        public DbSet<OrderHeader> OrderHeader { get; set; }
+        public DbSet<OrderDetail> OrderDetail { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
