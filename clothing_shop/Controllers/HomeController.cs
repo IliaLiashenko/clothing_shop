@@ -1,23 +1,29 @@
-﻿using clothing_shop.Data;
-using clothing_shop.Models;
-using clothing_shop.Models.ViewModels;
-using clothing_shop.Utility;
+﻿using Shop_DataAccess;
+using Shop_Models;
+using Shop_Models.ViewModels;
+using Shop_Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Shop_DataAccess.Repository.IRepository;
+using Microsoft.CodeAnalysis;
+using Shop_DataAccess.Repository;
 
 namespace clothing_shop.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext _db;
+        private readonly IProductRepository _prodRepo;
+        private readonly ICategoryRepository _catRepo;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
+        public HomeController(ILogger<HomeController> logger, IProductRepository prodRepo, 
+            ICategoryRepository catRepo)
         {
             _logger = logger;
-            _db = db;
+            _prodRepo = prodRepo;
+            _catRepo = catRepo;
         }
 
 
@@ -25,8 +31,8 @@ namespace clothing_shop.Controllers
         {
             HomeVM homeVM = new HomeVM()
             {
-                Products = _db.Product.Include(u => u.Category),
-                Categories = _db.Category
+                Products = _prodRepo.GetAll(includeProperties:"Category"),
+                Categories = _catRepo.GetAll()
             };
             return View(homeVM);
         }
@@ -45,15 +51,11 @@ namespace clothing_shop.Controllers
             {
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
-
-            var sizes = _db.ProductSizes
-                            .Where(ps => ps.ProductId == Id)
-                            .Select(ps => new SelectListItem { Value = ps.SizeId.ToString(), Text = ps.Size.Name })
-                            .ToList();
+            var sizes = _prodRepo.GetProductSizesDropdownList(Id);
 
             DetailsVM DetailsVM = new DetailsVM()
             {
-                Product = _db.Product.Include(u => u.Category).Where(u => u.Id == Id).FirstOrDefault(),
+                Product = _prodRepo.FirstOrDefault(u => u.Id == Id, includeProperties: "Category"),
                 ExistsInCart = shoppingCartList.Any(item => item.ProductId == Id),
                 SizeSelectList = new SelectList(sizes, "Value", "Text")
             };

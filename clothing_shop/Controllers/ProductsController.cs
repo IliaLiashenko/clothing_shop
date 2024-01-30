@@ -5,53 +5,54 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using clothing_shop.Data;
-using clothing_shop.Models;
-using clothing_shop.Models.ViewModels;
+using Shop_DataAccess;
+using Shop_Models;
+using Shop_Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Shop_DataAccess.Repository.IRepository;
+using Shop_Utility;
+using Microsoft.CodeAnalysis;
+using dotless.Core.Parser.Infrastructure;
+using Shop_DataAccess.Repository;
 
 namespace clothing_shop.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)]
+    [Authorize(Roles = Shop_Utility.WC.AdminRole)]
     public class ProductsController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductRepository _prodRepo;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductsController(IProductRepository prodRepo, IWebHostEnvironment webHostEnvironment)
         {
-            _context = context;
+            _prodRepo = prodRepo;
             _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            IEnumerable<Product> objList = _context.Product.Include(u => u.Category);
+            IEnumerable<Product> objList = _prodRepo.GetAll(includeProperties: "Category");
             return View(objList);
-            
+
         }
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Product == null)
+            if (id == null || _prodRepo == null)
             {
                 return NotFound();
             }
 
-            var product = await _context.Product
-                .Include(p => p.Category)
-                .Include(p => p.Colors)
-                .Include(p => p.ProductSizes)
-            .ThenInclude(ps => ps.Size)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _prodRepo.GetAllAsync(filter: m => m.Id == id,
+            includeProperties: "Category,Colors,ProductSizes.Size");
             if (product == null)
             {
                 return NotFound();
             }
 
-            return View(product);
+            return View(product.FirstOrDefault());
         }
 
         // GET: Products/Create
@@ -60,21 +61,9 @@ namespace clothing_shop.Controllers
             ProductVM productVM = new ProductVM()
             {
                 Product = new Product(),
-                CategorySelectList = _context.Category.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString()
-                }),
-                ColorsSelectList = _context.Colors.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString()
-                }),
-                SizeSelectList = _context.Size.Select(s => new SelectListItem
-                {
-                    Text = s.Name,
-                    Value = s.Id.ToString()
-                }),
+                CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName),
+                ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName),
+                SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName),
                 AvailableQuantities = new Dictionary<int, int>()
             };
             return View(productVM);
@@ -92,7 +81,7 @@ namespace clothing_shop.Controllers
                 var files = HttpContext.Request.Form.Files;
                 string webRootPath = _webHostEnvironment.WebRootPath;
 
-                string upload = webRootPath + WC.ImagePath;
+                string upload = webRootPath + Shop_Utility.WC.ImagePath;
                 string fileName = Guid.NewGuid().ToString();
                 string extension = Path.GetExtension(files[0].FileName);
 
@@ -103,9 +92,9 @@ namespace clothing_shop.Controllers
 
                 productVM.Product.Image = fileName + extension;
 
-                
-                _context.Product.Add(productVM.Product);
-                await _context.SaveChangesAsync();
+
+                _prodRepo.Add(productVM.Product);
+                await _prodRepo.SaveAsync();
 
                 foreach (var sizeId in productVM.SelectedSizeIds)
                 {
@@ -116,29 +105,17 @@ namespace clothing_shop.Controllers
                         productSize.AvailableQuantity = productVM.AvailableQuantities[sizeId];
                     }
 
-                    _context.ProductSizes.Add(productSize);
+                    _prodRepo.AddProductSize(productSize);
                 }
-                await _context.SaveChangesAsync();
+                await _prodRepo.SaveAsync();
 
                 return RedirectToAction("Index");
             }
 
-            
-            productVM.CategorySelectList = _context.Category.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
-            productVM.ColorsSelectList = _context.Colors.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
-            productVM.SizeSelectList = _context.Size.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
+
+            productVM.CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName);
+            productVM.ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName);
+            productVM.SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName);
 
 
             return View(productVM);
@@ -154,32 +131,23 @@ namespace clothing_shop.Controllers
             }
             ProductVM productVM = new ProductVM()
             {
-                Product = await _context.Product.FindAsync(id),
-                CategorySelectList = _context.Category.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString()
-                }),
-                ColorsSelectList = _context.Colors.Select(i => new SelectListItem
-                {
-                    Text = i.Name,
-                    Value = i.Id.ToString()
-                }),
-                SizeSelectList = _context.Size.Select(s => new SelectListItem
-                {
-                    Text = s.Name,
-                    Value = s.Id.ToString()
-                }),
+                Product = await _prodRepo.GetByIdAsync(id.GetValueOrDefault()),
+                CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName),
+                ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName),
+                SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName),
                 AvailableQuantities = new Dictionary<int, int>(),
-                SelectedSizeIds = _context.ProductSizes
-            .Where(ps => ps.ProductId == id)
-            .Select(ps => ps.SizeId)
-            .ToList()
+                SelectedSizeIds = _prodRepo.GetSizesByProductId(id.GetValueOrDefault())
             };
+            foreach (var sizeId in productVM.SizeSelectList.Select(size => int.Parse(size.Value)))
+            {
+                if (!productVM.AvailableQuantities.ContainsKey(sizeId))
+                {
+                    productVM.AvailableQuantities[sizeId] = 0;
+                }
+            }
             foreach (var sizeId in productVM.SelectedSizeIds)
             {
-                var productSize = _context.ProductSizes
-                    .FirstOrDefault(ps => ps.ProductId == id && ps.SizeId == sizeId);
+                var productSize = _prodRepo.GetProductSize(id.GetValueOrDefault(), sizeId);
 
                 if (productSize != null)
                 {
@@ -187,7 +155,7 @@ namespace clothing_shop.Controllers
                 }
                 else
                 {
-                    productVM.AvailableQuantities[sizeId] = 0; // Или другое значение по умолчанию
+                    productVM.AvailableQuantities[sizeId] = 0;
                 }
             }
             return View(productVM);
@@ -203,8 +171,8 @@ namespace clothing_shop.Controllers
             {
                 var files = HttpContext.Request.Form.Files;
                 string webRootPath = _webHostEnvironment.WebRootPath;
-                var objFromDb = _context.Product.Include(p => p.Colors)
-                    .Include(p => p.ProductSizes).FirstOrDefault(u => u.Id == productVM.Product.Id);
+                var objFromDb = _prodRepo.GetProductWithDetailsAsync(productVM.Product.Id).Result;
+
 
                 if (objFromDb == null)
                 {
@@ -213,7 +181,7 @@ namespace clothing_shop.Controllers
 
                 if (files.Count > 0)
                 {
-                    string upload = webRootPath + WC.ImagePath;
+                    string upload = webRootPath + Shop_Utility.WC.ImagePath;
                     string fileName = Guid.NewGuid().ToString();
                     string extension = Path.GetExtension(files[0].FileName);
 
@@ -234,8 +202,14 @@ namespace clothing_shop.Controllers
                 {
                     productVM.Product.Image = objFromDb.Image;
                 }
-                
+
                 objFromDb.ColorsId = productVM.Product.ColorsId;
+                objFromDb.ProductName = productVM.Product.ProductName;
+                objFromDb.ProductDescription = productVM.Product.ProductDescription;
+                objFromDb.Price = productVM.Product.Price;
+                objFromDb.Image = productVM.Product.Image;
+                objFromDb.DisplayOrder = productVM.Product.DisplayOrder;
+                objFromDb.CategoryId = productVM.Product.CategoryId;
 
                 foreach (var sizeId in productVM.SelectedSizeIds)
                 {
@@ -246,6 +220,10 @@ namespace clothing_shop.Controllers
                         if (productVM.AvailableQuantities.ContainsKey(sizeId))
                         {
                             productSize.AvailableQuantity = productVM.AvailableQuantities[sizeId];
+                        }
+                        else
+                        {
+                            productSize.AvailableQuantity = 0;
                         }
                     }
                     else
@@ -261,32 +239,21 @@ namespace clothing_shop.Controllers
                         var productSizeToDelete = objFromDb.ProductSizes.FirstOrDefault(ps => ps.SizeId == sizeId);
                         if (productSizeToDelete != null)
                         {
-                            _context.ProductSizes.Remove(productSizeToDelete);
+                            _prodRepo.RemoveProductSize(productSizeToDelete);
                         }
                     }
                 }
 
-                _context.Attach(objFromDb);
-                _context.Entry(objFromDb).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
+                _prodRepo.Update(objFromDb);
+
+                //еще нужно обновить objFromDb
+                await _prodRepo.SaveAsync();
                 return RedirectToAction("Index");
             }
 
-            productVM.CategorySelectList = _context.Category.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
-            productVM.ColorsSelectList = _context.Colors.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
-            productVM.SizeSelectList = _context.Size.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString()
-            });
+            productVM.CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName);
+            productVM.ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName);
+            productVM.SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName);
             return View(productVM);
         }
 
@@ -294,15 +261,15 @@ namespace clothing_shop.Controllers
         // GET: Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Product == null)
+            if (id == null || _prodRepo == null)
             {
                 return NotFound();
             }
-            Product product = _context.Product.Include(u=>u.Category).FirstOrDefault(u=>u.Id==id);
+            Product product = await _prodRepo.GetProductWithDetailsAsync(id.GetValueOrDefault());
             //product.Category = _context.Category.Find(product.CategoryId);
 
             //var product = await _context.Product
-                //.FirstOrDefaultAsync(m => m.Id == id);
+            //.FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -317,37 +284,37 @@ namespace clothing_shop.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
 
-            var obj = _context.Product.Find(id);
+            var obj = await _prodRepo.GetByIdAsync(id);
             if (obj == null)
             {
                 return NotFound();
             }
-            string upload = _webHostEnvironment.WebRootPath + WC.ImagePath;
+            string upload = _webHostEnvironment.WebRootPath + Shop_Utility.WC.ImagePath;
             var oldFile = Path.Combine(upload, obj.Image);
 
             if (System.IO.File.Exists(oldFile))
             {
                 System.IO.File.Delete(oldFile);
             }
-            
 
-            if (_context.Product == null)
+
+            if (_prodRepo == null)
             {
-                return Problem("Entity set 'ApplicationDbContext.Product'  is null.");
+                return NotFound();
             }
-            var product = await _context.Product.FindAsync(id);
+            var product = await _prodRepo.GetByIdAsync(id);
             if (product != null)
             {
-                _context.Product.Remove(product);
+                _prodRepo.Remove(product);
             }
-            
-            await _context.SaveChangesAsync();
+
+            await _prodRepo.SaveAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProductExists(int id)
         {
-          return (_context.Product?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _prodRepo.Any(p => p.Id == id);
         }
     }
 }
