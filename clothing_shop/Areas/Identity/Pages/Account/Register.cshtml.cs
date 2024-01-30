@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-using clothing_shop.Models;
+using Shop_Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -109,10 +109,10 @@ namespace clothing_shop.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if(!await _roleManager.RoleExistsAsync(WC.AdminRole))
+            if(!await _roleManager.RoleExistsAsync(Shop_Utility.WC.AdminRole))
             {
-                await _roleManager.CreateAsync(new IdentityRole(WC.AdminRole));
-                await _roleManager.CreateAsync(new IdentityRole(WC.CustomerRole));
+                await _roleManager.CreateAsync(new IdentityRole(Shop_Utility.WC.AdminRole));
+                await _roleManager.CreateAsync(new IdentityRole(Shop_Utility.WC.CustomerRole));
             }
 
             ReturnUrl = returnUrl;
@@ -134,13 +134,13 @@ namespace clothing_shop.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    if (User.IsInRole(WC.AdminRole))
+                    if (User.IsInRole(Shop_Utility.WC.AdminRole))
                     {
-                        await _userManager.AddToRoleAsync(user, WC.AdminRole);
+                        await _userManager.AddToRoleAsync(user, Shop_Utility.WC.AdminRole);
                     }
                     else
                     {
-                        await _userManager.AddToRoleAsync(user, WC.CustomerRole);
+                        await _userManager.AddToRoleAsync(user, Shop_Utility.WC.CustomerRole);
                     }
 
 

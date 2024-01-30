@@ -1,4 +1,4 @@
-﻿@model clothing_shop.Models.ViewModels.ProductUserVM
+﻿@model Shop_Models.ViewModels.ProductUserVM
 
 
 <form method="post">
@@ -12,7 +12,7 @@
                         Order Summary
                     </div>
                     <div class="col-6 text-right">
-                        <a class="btn btn-outline-info btn-sm">Back to Cart</a>
+                        <a class="btn btn-outline-info btn-sm" asp-action="Index">Back to Cart</a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -21,13 +21,13 @@
                             <div class="col-12 col-lg-7 pb-4">
                                 <div class="row">
                                     <h4 class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-info">PickUp Details:</span>
+                                        <span class="text-info">User Details:</span>
                                     </h4>
                                 </div>
 
                                 <div class="row my-1">
                                     <div class="col-3">
-                                        <label>Full name</label>
+                                        <label>Name</label>
                                     </div>
                                     <div class="col-9">
                                         <input asp-for="ApplicationUser.FullName" type="text" class="form-control" />
@@ -37,7 +37,7 @@
                                 
                                 <div class="row my-1">
                                     <div class="col-3">
-                                        <label>Email</label>
+                                        <label>Phone</label>
                                     </div>
                                     <div class="col-9">
                                         <input asp-for="ApplicationUser.PhoneNumber" type="text" class="form-control" />
@@ -46,49 +46,14 @@
                                 </div>
                                 <div class="row my-1">
                                     <div class="col-3">
-                                        <label>Phone</label>
+                                        <label>Email</label>
                                     </div>
                                     <div class="col-9">
                                         <input asp-for="ApplicationUser.Email" type="text" class="form-control" />
                                         <span asp-validation-for="ApplicationUser.Email" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="row my-1">
-                                    <div class="col-3">
-                                        <label>Street, house number</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="text" class="form-control" />
-                                        <span class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="row my-1">
-                                    <div class="col-3">
-                                        <label>Postcode</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="text" class="form-control" />
-                                        <span class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="row my-1">
-                                    <div class="col-3">
-                                        <label>City</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="text" class="form-control" />
-                                        <span class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="row my-1">
-                                    <div class="col-3">
-                                        <label>Country</label>
-                                    </div>
-                                    <div class="col-9">
-                                        <input type="text" class="form-control" />
-                                        <span class="text-danger"></span>
-                                    </div>
-                                </div>
+                                
                             </div>
                             <div class="col-12 col-lg-5 row">
                                 <div class="col-12">
@@ -96,12 +61,14 @@
                                         <span class="text-info">Summary:</span>
                                     </h4>
                                     <ul class="list-group mb-3">
-                                        @foreach(var obj in Model.ProductList)
+                                        @for(int i = 0; i < Model.ProductList.Count(); i++)
                                         {
+                                            <input type="hidden" asp-for="@Model.ProductList[i].Id" />
+                                            <input type="hidden" asp-for="@Model.ProductList[i].ProductName" />
                                             <li class="list-group-item d-flex justify-content-between">
                                                 <div>
-                                                    <h6 class="my-0">@obj.ProductName</h6>
-                                                    <small class="text-muted">@obj.Price€</small>
+                                                    <h6 class="my-0">@Model.ProductList[i].ProductName</h6>
+                                                    <small class="text-muted">@Model.ProductList[i].Price€</small>
                                                 </div>
                                             </li>
                                         }

@@ -5,28 +5,30 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using clothing_shop.Data;
-using clothing_shop.Models;
+using Shop_DataAccess;
+using Shop_Models;
 using Microsoft.AspNetCore.Authorization;
+using Shop_DataAccess.Repository.IRepository;
+using dotless.Core.Parser.Infrastructure;
 
 namespace clothing_shop.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)]
+    [Authorize(Roles = Shop_Utility.WC.AdminRole)]
     public class CategoriesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryRepository _catRepo;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ICategoryRepository catRepo)
         {
-            _context = context;
+            _catRepo = catRepo;
         }
 
         // GET: Categories
+
         public async Task<IActionResult> Index()
         {
-              return _context.Category != null ? 
-                          View(await _context.Category.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Category'  is null.");
+            IEnumerable<Category> objList = _catRepo.GetAll();
+            return View(objList);
         }
 
         //// GET: Categories/Details/5
@@ -58,31 +60,31 @@ namespace clothing_shop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Category category)
+        public async Task<IActionResult> Create([Bind("Id,Name")] Category obj)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(category);
-                await _context.SaveChangesAsync();
+                _catRepo.Add(obj);
+                await _catRepo.SaveAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(category);
+            return View(obj);
         }
 
         // GET: Categories/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Category == null)
+            if (id == null || _catRepo == null)
             {
                 return NotFound();
             }
 
-            var category = await _context.Category.FindAsync(id);
-            if (category == null)
+            var obj = _catRepo.Find(id.GetValueOrDefault());
+            if (obj == null)
             {
                 return NotFound();
             }
-            return View(category);
+            return View(obj);
         }
 
         // POST: Categories/Edit/5
@@ -90,9 +92,9 @@ namespace clothing_shop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Category category)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Category obj)
         {
-            if (id != category.Id)
+            if (id != obj.Id)
             {
                 return NotFound();
             }
@@ -101,12 +103,12 @@ namespace clothing_shop.Controllers
             {
                 try
                 {
-                    _context.Update(category);
-                    await _context.SaveChangesAsync();
+                    _catRepo.Update(obj);
+                    await _catRepo.SaveAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CategoryExists(category.Id))
+                    if (!await CategoryExistsAsync(obj.Id))
                     {
                         return NotFound();
                     }
@@ -117,25 +119,24 @@ namespace clothing_shop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(category);
+            return View(obj);
         }
 
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Category == null)
+            if (id == null || _catRepo == null)
             {
                 return NotFound();
             }
 
-            var category = await _context.Category
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (category == null)
+            var obj = _catRepo.Find(id.GetValueOrDefault());
+            if (obj == null)
             {
                 return NotFound();
             }
 
-            return View(category);
+            return View(obj);
         }
 
         // POST: Categories/Delete/5
@@ -143,23 +144,23 @@ namespace clothing_shop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Category == null)
+            if (_catRepo == null)
             {
-                return Problem("Entity set 'ApplicationDbContext.Category'  is null.");
+                return NotFound();
             }
-            var category = await _context.Category.FindAsync(id);
-            if (category != null)
+            var obj = _catRepo.Find(id);
+            if (obj != null)
             {
-                _context.Category.Remove(category);
+                _catRepo.Remove(obj);
             }
             
-            await _context.SaveChangesAsync();
+            await _catRepo.SaveAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CategoryExists(int id)
+        private async Task<bool> CategoryExistsAsync(int id)
         {
-          return (_context.Category?.Any(e => e.Id == id)).GetValueOrDefault();
+            return await _catRepo.AnyAsync(e => e.Id == id);
         }
     }
 }

@@ -1,12 +1,12 @@
-﻿using clothing_shop.Data;
-using clothing_shop.Models;
+﻿using Shop_DataAccess;
+using Shop_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace clothing_shop.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)]
+    [Authorize(Roles = Shop_Utility.WC.AdminRole)]
     public class ColorsController : Controller
     {
         private readonly ApplicationDbContext _context;

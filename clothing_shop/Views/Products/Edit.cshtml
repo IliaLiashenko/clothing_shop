@@ -1,5 +1,5 @@
-﻿@model clothing_shop.Models.ViewModels.ProductVM
-
+﻿@model Shop_Models.ViewModels.ProductVM
+@using Shop_Utility
 @{
     ViewData["Title"] = "Edit";
 }
@@ -48,23 +48,13 @@
                 <label asp-for="SelectedSizeIds" class="control-label">Select Sizes</label>
                 @if (Model.SizeSelectList != null)
                 {
-                    foreach (var size in Model.SizeSelectList)
+                    @foreach (var size in Model.SizeSelectList)
                     {
-                        if (size != null)
-                        {
-                            <div>
-                                <input type="checkbox" name="SelectedSizeIds" value="@size.Value" class="size-checkbox" @(Model.SelectedSizeIds.Contains(int.Parse(size.Value)) ? "checked" : "") />
-                                <label>@size.Text</label>
-                                @if (Model.SelectedSizeIds.Contains(int.Parse(size.Value)))
-                                {
-                                    <input type="number" name="AvailableQuantities[@size.Value]" value="@(Model.AvailableQuantities.ContainsKey(int.Parse(size.Value)) ? Model.AvailableQuantities[int.Parse(size.Value)] : 0)" min="0" class="form-control quantity-input" />
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p>An element in SizeSelectList is null.</p>
-                        }
+                        <div class="size-container">
+                            <input type="checkbox" name="SelectedSizeIds" value="@size.Value" class="size-checkbox" @(Model.SelectedSizeIds.Contains(int.Parse(size.Value)) ? "checked" : "") />
+                            <label>@size.Text</label>
+                            <input type="number" name="AvailableQuantities[@size.Value]" value="@(Model.AvailableQuantities.ContainsKey(int.Parse(size.Value)) ? Model.AvailableQuantities[int.Parse(size.Value)] : 1)" min="1" class="form-control quantity-input" />
+                        </div>
                     }
                 }
                 else
@@ -103,8 +93,35 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Скрыть все поля сразу при загрузке страницы
+            $('.quantity-input').hide();
+
+            $('.size-checkbox').change(function () {
+                var container = $(this).closest('.size-container');
+                var quantityInput = container.find('.quantity-input');
+
+                if ($(this).prop('checked')) {
+                    quantityInput.show();
+                } else {
+                    quantityInput.hide();
+                }
+            });
+
+            // Показать поля для выбранных чекбоксов при загрузке страницы
+            $('.size-checkbox:checked').each(function () {
+                var container = $(this).closest('.size-container');
+                var quantityInput = container.find('.quantity-input');
+                quantityInput.show();
+            });
+        });
+    </script>
     @* <script>
         $(document).ready(function () {
             $('.summernote').summernote({ height: 200 });
