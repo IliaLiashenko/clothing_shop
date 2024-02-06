@@ -9,6 +9,7 @@
 
         public ApplicationUser ApplicationUser { get; set; }
         public IList<Product> ProductList { get; set; }
-        public List<ShoppingCart> ShoppingCartList { get; set; }
+
+
     }
 }

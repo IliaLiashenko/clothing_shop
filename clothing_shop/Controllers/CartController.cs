@@ -16,16 +16,19 @@ namespace clothing_shop.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IApplicationUserRepository _userRepo;
         private readonly IProductRepository _prodRepo;
+        private readonly ISizeRepository _sizeRepo;
         private readonly IInquiryHeaderRepository _inqHRepo;
         private readonly IInquiryDetailRepository _inqDRepo;
         [BindProperty]
         public ProductUserVM ProductUserVM { get; set; }
-        public CartController(IWebHostEnvironment webHostEnvironment, IApplicationUserRepository userRepo, IProductRepository prodRepo,
+        public CartController(IWebHostEnvironment webHostEnvironment, IApplicationUserRepository userRepo, 
+            IProductRepository prodRepo, ISizeRepository sizeRepo,
             IInquiryHeaderRepository inqHRepo, IInquiryDetailRepository inqDRepo)
         {
             _webHostEnvironment = webHostEnvironment;
             _userRepo = userRepo;
             _prodRepo = prodRepo;
+            _sizeRepo = sizeRepo;
             _inqHRepo = inqHRepo;
             _inqDRepo = inqDRepo;
         }
@@ -42,7 +45,17 @@ namespace clothing_shop.Controllers
             }
 
             List<int> prodInCart = shoppingCartList.Select(i => i.ProductId).ToList();
-            IEnumerable<Product> prodList = _prodRepo.GetAll(u => prodInCart.Contains(u.Id));
+            IEnumerable<Product> prodListTemp = _prodRepo.GetAll(u => prodInCart.Contains(u.Id));
+            IList<Product> prodList = new List<Product>();
+
+			foreach (var cartObj in shoppingCartList)
+            {
+                Product prodTemp = prodListTemp.FirstOrDefault(u => u.Id == cartObj.ProductId);
+
+                prodTemp.TempQty = cartObj.Qty;
+                prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
+                prodList.Add(prodTemp);
+			}
 
             return View(prodList);
         }
@@ -50,18 +63,52 @@ namespace clothing_shop.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Index")]
-        public IActionResult IndexPost()
+        public IActionResult IndexPost(IEnumerable<Product> ProdList)
         {
+			List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+			foreach (Product prod in ProdList)
+			{
+				shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Qty = prod.TempQty, SizeId = prod.Size.Id });
+			}
 
-            return RedirectToAction(nameof(Summary));
+			HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+			return RedirectToAction(nameof(Summary));
         }
 
 
         public IActionResult Summary()
         {
-            var claimsIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            //var userId = User.FindFirstValue(ClaimTypes.Name);
+			ApplicationUser applicationUser;
+            if (User.IsInRole(WC.AdminRole))
+            {
+				if (HttpContext.Session.Get<int>(WC.SessionInquiryId) != 0)
+				{
+					InquiryHeader inquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == HttpContext.Session.Get<int>(WC.SessionInquiryId));
+					applicationUser = new ApplicationUser()
+					{
+						Email = inquiryHeader.Email,
+						FullName = inquiryHeader.FullName,
+						PhoneNumber = inquiryHeader.PhoneNumber,
+                        StreetAddress = inquiryHeader.StreetAddress,
+                        City = inquiryHeader.City,
+                        State = inquiryHeader.State,
+                        PostalCode = inquiryHeader.PostalCode
+					};
+				}
+                else
+                {
+                    applicationUser = new ApplicationUser();
+                }
+			}
+            else
+            {
+				var claimsIdentity = (ClaimsIdentity)User.Identity;
+				var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+				//var userId = User.FindFirstValue(ClaimTypes.Name);
+				applicationUser = _userRepo.FirstOrDefault(u => u.Id == claim.Value);
+			}
+
+
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
             if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
                 && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
@@ -75,10 +122,17 @@ namespace clothing_shop.Controllers
 
             ProductUserVM = new ProductUserVM()
             {
-                ApplicationUser = _userRepo.FirstOrDefault(u => u.Id == claim.Value),
-                ProductList = prodList.ToList()
+                ApplicationUser = applicationUser
             };
 
+            foreach(var cartObj in shoppingCartList)
+            {
+				Product prodTemp = _prodRepo.FirstOrDefault(u => u.Id == cartObj.ProductId);
+				prodTemp.TempQty = cartObj.Qty;
+				prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
+
+                ProductUserVM.ProductList.Add(prodTemp);
+			}
 
             return View(ProductUserVM);
         }
@@ -88,6 +142,7 @@ namespace clothing_shop.Controllers
         [ActionName("Summary")]
         public async Task<IActionResult> SummaryPost(ProductUserVM ProductUserVM)
         {
+            
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -114,6 +169,10 @@ namespace clothing_shop.Controllers
                     ProductUserVM.ApplicationUser.FullName,
                     ProductUserVM.ApplicationUser.Email,
                     ProductUserVM.ApplicationUser.PhoneNumber,
+                    ProductUserVM.ApplicationUser.StreetAddress,
+                    ProductUserVM.ApplicationUser.City,
+                    ProductUserVM.ApplicationUser.State,
+                    ProductUserVM.ApplicationUser.PostalCode,
                     productListSB.ToString());
 
 
@@ -125,18 +184,31 @@ namespace clothing_shop.Controllers
                 FullName = ProductUserVM.ApplicationUser.FullName,
                 Email = ProductUserVM.ApplicationUser.Email,
                 PhoneNumber = ProductUserVM.ApplicationUser.PhoneNumber,
+                StreetAddress = ProductUserVM.ApplicationUser.StreetAddress,
+                City = ProductUserVM.ApplicationUser.City,
+                State = ProductUserVM.ApplicationUser.State,
+                PostalCode = ProductUserVM.ApplicationUser.PostalCode,
                 InquiryDate = DateTime.Now
             };
 
             _inqHRepo.Add(inquiryHeader);
             await _inqHRepo.SaveAsync();
-
-            foreach (var prod in ProductUserVM.ProductList)
+            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
+                && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
+            {
+                //session exsits
+                shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
+            }
+            foreach (var prod in shoppingCartList)
             {
                 InquiryDetail inquiryDetail = new InquiryDetail()
                 {
                     InquiryHeaderId = inquiryHeader.Id,
-                    ProductId = prod.Id
+                    ProductId = prod.ProductId,
+                    SizeId = prod.SizeId,
+                    Qty = prod.Qty
+
                 };
                 _inqDRepo.Add(inquiryDetail);
                 await _inqDRepo.SaveAsync();
@@ -169,5 +241,20 @@ namespace clothing_shop.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-    }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+		public IActionResult UpdateCart(IEnumerable<Product> ProdList)
+        {
+            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+            foreach (Product prod in ProdList)
+            {
+				shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Qty = prod.TempQty, SizeId = prod.Size.Id});
+            }
+
+            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+            return RedirectToAction(nameof(Index));
+        }
+
+	}
 }

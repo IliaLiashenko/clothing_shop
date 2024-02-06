@@ -10,6 +10,7 @@ using System.Text;
 
 namespace clothing_shop.Controllers
 {
+    [Authorize(Roles=WC.AdminRole)]
     public class InquiryController : Controller
     {
         private readonly IInquiryHeaderRepository _inqHRepo;
@@ -33,7 +34,7 @@ namespace clothing_shop.Controllers
             InquiryVM = new InquiryVM()
             {
                 InquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == id),
-                InquiryDetail = _inqDRepo.GetAll(u => u.InquiryHeaderId == id, includeProperties: "Product")
+                InquiryDetail = _inqDRepo.GetAll(u => u.InquiryHeaderId == id, includeProperties: "Product,Size")
             };
             return View(InquiryVM);
         }
@@ -42,13 +43,37 @@ namespace clothing_shop.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Details()
         {
-            InquiryVM = new InquiryVM()
+            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+            InquiryVM.InquiryDetail = _inqDRepo.GetAll(u => u.InquiryHeaderId == InquiryVM.InquiryHeader.Id);
+            foreach (var detail in InquiryVM.InquiryDetail)
             {
-                InquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == id),
-                InquiryDetail = _inqDRepo.GetAll(u => u.InquiryHeaderId == id, includeProperties: "Product")
-            };
-            return View(InquiryVM);
+                ShoppingCart shoppingCart = new ShoppingCart()
+                {
+                    ProductId = detail.ProductId,
+                    Qty = 1
+                };
+                shoppingCartList.Add(shoppingCart);
+            }
+            HttpContext.Session.Clear();
+            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+            HttpContext.Session.Set(WC.SessionInquiryId, InquiryVM.InquiryHeader.Id);
+            return RedirectToAction("Index", "Cart");
         }
+
+
+        [HttpPost]
+        public IActionResult Delete()
+        {
+            InquiryHeader inquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == InquiryVM.InquiryHeader.Id);
+            IEnumerable<InquiryDetail> inquiryDetails = _inqDRepo.GetAll(u => u.InquiryHeaderId == InquiryVM.InquiryHeader.Id);
+
+            _inqDRepo.RemoveRange(inquiryDetails);
+            _inqHRepo.Remove(inquiryHeader);
+            _inqHRepo.Save();
+            
+            return RedirectToAction(nameof(Index));
+        }
+
 
         #region API CALLS
         [HttpGet]

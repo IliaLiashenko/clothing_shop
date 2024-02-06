@@ -7,6 +7,10 @@ namespace Shop_Models
 {
     public class Product
     {
+        public Product()
+        {
+            TempQty = 1;
+        }
         public int Id { get; set; }
 
         [DisplayName("Name")]
@@ -15,7 +19,7 @@ namespace Shop_Models
         [DisplayName("Description")]
         public string ProductDescription { get; set; }
 
-        public decimal Price { get; set; }
+        public double Price { get; set; }
         [ValidateNever]
         [NotMapped]
         public virtual ICollection<ProductSize> ProductSizes { get; set; }
@@ -42,6 +46,13 @@ namespace Shop_Models
         [ForeignKey("CategoryId")]
         [ValidateNever]
         public virtual Category Category { get; set; }
+
+        [NotMapped]
+        [ValidateNever]
+        public Size Size { get; set; }
+        [NotMapped]
+        [Range(1, 50)]
+        public int TempQty { get; set; }
 
     }
 }

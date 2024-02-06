@@ -3,22 +3,23 @@ using Shop_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Shop_DataAccess.Repository.IRepository;
 
 namespace clothing_shop.Controllers
 {
     [Authorize(Roles = Shop_Utility.WC.AdminRole)]
     public class SizesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ISizeRepository _sizeRepo;
 
-        public SizesController(ApplicationDbContext context)
+        public SizesController(ISizeRepository sizeRepo)
         {
-            _context = context;
+           _sizeRepo = sizeRepo;
         }
         public async Task<IActionResult> Index()
         {
-            return _context.Size != null ?
-                        View(await _context.Size.ToListAsync()) :
+            return _sizeRepo != null ?
+                        View(await _sizeRepo.GetAllSizes().ToListAsync()) :
                         Problem("Entity set 'ApplicationDbContext.Size'  is null.");
         }
         public IActionResult Create()
@@ -31,22 +32,22 @@ namespace clothing_shop.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(size);
-                await _context.SaveChangesAsync();
+                _sizeRepo.Add(size);
+                await _sizeRepo.SaveAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(size);
         }
 
         // GET: Categories/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Size == null)
+            if (id == null || _sizeRepo == null)
             {
                 return NotFound();
             }
 
-            var size = await _context.Size.FindAsync(id);
+            var size = _sizeRepo.Find(id);
             if (size == null)
             {
                 return NotFound();
@@ -70,12 +71,12 @@ namespace clothing_shop.Controllers
             {
                 try
                 {
-                    _context.Update(size);
-                    await _context.SaveChangesAsync();
+                    _sizeRepo.Update(size);
+                    await _sizeRepo.SaveAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SizeExists(size.Id))
+                    if (!await SizeExistsAsync(size.Id))
                     {
                         return NotFound();
                     }
@@ -92,13 +93,13 @@ namespace clothing_shop.Controllers
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Size == null)
+            if (id == null || _sizeRepo == null)
             {
                 return NotFound();
             }
 
-            var size = await _context.Size
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var size = _sizeRepo
+                .FirstOrDefault(m => m.Id == id);
             if (size == null)
             {
                 return NotFound();
@@ -112,23 +113,23 @@ namespace clothing_shop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Size == null)
+            if (_sizeRepo == null)
             {
                 return Problem("Entity set 'ApplicationDbContext.Size'  is null.");
             }
-            var size = await _context.Size.FindAsync(id);
+            var size = _sizeRepo.Find(id);
             if (size != null)
             {
-                _context.Size.Remove(size);
+                _sizeRepo.Remove(size);
             }
 
-            await _context.SaveChangesAsync();
+            await _sizeRepo.SaveAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SizeExists(int id)
+        private async Task<bool> SizeExistsAsync(int id)
         {
-            return (_context.Size?.Any(e => e.Id == id)).GetValueOrDefault();
+            return await _sizeRepo.AnyAsync(e => e.Id == id);
         }
     }
 }

@@ -65,7 +65,7 @@ namespace clothing_shop.Controllers
 
 
         [HttpPost, ActionName("Details")]
-        public IActionResult DetailsPost(DetailsVM model)
+        public IActionResult DetailsPost(int id, DetailsVM detailsVM)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
 
@@ -75,8 +75,7 @@ namespace clothing_shop.Controllers
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
 
-            // Добавляем выбранный размер и количество
-            shoppingCartList.Add(new ShoppingCart { ProductId = model.Product.Id, SizeId = model.SelectedSizeId, Quantity = model.Quantity });
+            shoppingCartList.Add(new ShoppingCart { ProductId = id, SizeId = detailsVM.Size.Id, Qty =  detailsVM.Product.TempQty});
 
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
 
