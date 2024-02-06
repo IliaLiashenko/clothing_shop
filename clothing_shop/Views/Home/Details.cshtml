@@ -46,10 +46,12 @@
                             <p class="price">€@priceAsInt</p>
                             <div class="column small-12 large-6">
                                 <h6 class="product-color-title">Size</h6>
-                                <select asp-for="SelectedSizeId" asp-items="@Model.SizeSelectList" class="form-control"></select>
+                                <select asp-for="Size.Id" asp-items="@Model.SizeSelectList" class="form-control"></select>
+                                <br /><span>Qty:</span> <input asp-for="@Model.Product.TempQty" class="qty">
+                                <span asp-validation-for="@Model.Product.TempQty" class="text-danger"></span>
                             </div>
-                            <p> <span>Qty:</span> <input asp-for="@Model.Quantity" class="qty" type="number" value="1"> </p>
-                            <button type="submit" asp-route-id="@Model.Product.Id" class="button expanded">Add to Cart</button>
+                            <br />
+                            <button type="submit" asp-route-id="@Model.Product.Id" class="btn btn-dark form-control" >Add to Cart</button>
 
                             
                             

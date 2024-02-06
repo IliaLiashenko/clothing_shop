@@ -13,10 +13,7 @@ namespace Shop_Models.ViewModels
         public bool ExistsInCart { get; set; }
 
         [Display(Name = "Size")]
-        public int SelectedSizeId { get; set; }
-
-        [Display(Name = "Quantity")]
-        public int Quantity { get; set; }
+        public Size Size { get; set; }
 
         public IEnumerable<SelectListItem> SizeSelectList { get; set; }
     }

@@ -20,5 +20,10 @@ namespace Shop_Models
         public int ProductId { get; set; }
         [ForeignKey("ProductId")]
         public Product? Product { get; set; }
+        [Required]
+        public int SizeId { get; set; }
+        [ForeignKey("SizeId")]
+        public Size Size { get; set; }
+        public int Qty { get; set; }
     }
 }

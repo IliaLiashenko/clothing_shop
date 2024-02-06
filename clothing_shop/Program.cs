@@ -44,6 +44,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 //builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<IInquiryHeaderRepository, InquiryHeaderRepository>();
 builder.Services.AddScoped<IInquiryDetailRepository, InquiryDetailRepository>();
 builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
@@ -52,7 +53,7 @@ builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession(Options =>
 {
-    Options.IdleTimeout = TimeSpan.FromMinutes(10);
+    Options.IdleTimeout = TimeSpan.FromMinutes(40);
     Options.Cookie.HttpOnly = true;
     Options.Cookie.IsEssential = true;
 });
