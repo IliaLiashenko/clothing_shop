@@ -19,8 +19,7 @@ namespace Shop_DataAccess
         public DbSet<ProductSize> ProductSizes { get; set; } = default!;
         public DbSet<InquiryHeader> InquiryHeader { get; set; }
         public DbSet<InquiryDetail> InquiryDetail { get; set; }
-        public DbSet<OrderHeader> OrderHeader { get; set; }
-        public DbSet<OrderDetail> OrderDetail { get; set; }
+        public DbSet<ShoppingCart> ShoppingCart { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Shop_DataAccess.Repository.IRepository;
 using System.Text;
+using Stripe.Checkout;
+//using Shop_Utility.BrainTree;
 
 namespace clothing_shop.Controllers
 {
@@ -19,11 +21,13 @@ namespace clothing_shop.Controllers
         private readonly ISizeRepository _sizeRepo;
         private readonly IInquiryHeaderRepository _inqHRepo;
         private readonly IInquiryDetailRepository _inqDRepo;
+        private readonly IShoppingCartRepository _cartRepo;
+
         [BindProperty]
         public ProductUserVM ProductUserVM { get; set; }
         public CartController(IWebHostEnvironment webHostEnvironment, IApplicationUserRepository userRepo, 
             IProductRepository prodRepo, ISizeRepository sizeRepo,
-            IInquiryHeaderRepository inqHRepo, IInquiryDetailRepository inqDRepo)
+            IInquiryHeaderRepository inqHRepo, IInquiryDetailRepository inqDRepo, IShoppingCartRepository cartRepo)
         {
             _webHostEnvironment = webHostEnvironment;
             _userRepo = userRepo;
@@ -31,6 +35,7 @@ namespace clothing_shop.Controllers
             _sizeRepo = sizeRepo;
             _inqHRepo = inqHRepo;
             _inqDRepo = inqDRepo;
+            _cartRepo = cartRepo;
         }
 
         public IActionResult Index()
@@ -48,16 +53,47 @@ namespace clothing_shop.Controllers
             IEnumerable<Product> prodListTemp = _prodRepo.GetAll(u => prodInCart.Contains(u.Id));
             IList<Product> prodList = new List<Product>();
 
-			foreach (var cartObj in shoppingCartList)
-            {
-                Product prodTemp = prodListTemp.FirstOrDefault(u => u.Id == cartObj.ProductId);
+			ProductUserVM productUserVM = new ProductUserVM
+			{
+				ProductList = new List<Product>(),
+				AvailableQuantities = new Dictionary<int, Dictionary<int, int>>()
+			};
 
-                prodTemp.TempQty = cartObj.Qty;
-                prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
-                prodList.Add(prodTemp);
+			foreach (var cartObj in shoppingCartList)
+			{
+				Product prodTemp = CloneProduct(prodListTemp.FirstOrDefault(u => u.Id == cartObj.ProductId));
+
+				prodTemp.TempQty = cartObj.Qty;
+				prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
+				prodList.Add(prodTemp);
+
+				int availableQty = _prodRepo.GetAvailableQuantitiesForProductAndSize(cartObj.ProductId, cartObj.SizeId)[cartObj.SizeId];
+				if (!productUserVM.AvailableQuantities.ContainsKey(cartObj.ProductId))
+				{
+					productUserVM.AvailableQuantities[cartObj.ProductId] = new Dictionary<int, int>();
+				}
+				productUserVM.AvailableQuantities[cartObj.ProductId][cartObj.SizeId] = availableQty;
 			}
 
-            return View(prodList);
+			productUserVM.ProductList = prodList;
+
+			return View(productUserVM);
+        }
+
+        private Product CloneProduct(Product original)
+        {
+            return new Product
+            {
+                Id = original.Id,
+                ProductName = original.ProductName,
+                ProductDescription = original.ProductDescription,
+                Price = original.Price,
+                ColorsId = original.ColorsId,
+                Image = original.Image,
+                DisplayOrder = original.DisplayOrder,
+                CategoryId = original.CategoryId,
+                TempQty = original.TempQty,
+            };
         }
 
         [HttpPost]
@@ -99,7 +135,7 @@ namespace clothing_shop.Controllers
                 {
                     applicationUser = new ApplicationUser();
                 }
-			}
+            }
             else
             {
 				var claimsIdentity = (ClaimsIdentity)User.Identity;
@@ -107,7 +143,7 @@ namespace clothing_shop.Controllers
 				//var userId = User.FindFirstValue(ClaimTypes.Name);
 				applicationUser = _userRepo.FirstOrDefault(u => u.Id == claim.Value);
 			}
-
+            
 
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
             if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
@@ -150,6 +186,8 @@ namespace clothing_shop.Controllers
                 + "templates" + Path.DirectorySeparatorChar.ToString() + "Inquiry.html";
             var subject = "New Inquiry";
             string HtmlBody = "";
+
+            //ApplicationUser applicationUser = _userRepo.FirstOrDefault(u => u.Id == claim.Value);
             using (StreamReader sr = System.IO.File.OpenText(PathToTemplate))
             {
                 HtmlBody = sr.ReadToEnd();
@@ -158,6 +196,11 @@ namespace clothing_shop.Controllers
             //Email: {1}
             //Phone: {2}
             //Products: {3}
+
+            foreach (var cart in ProductUserVM.ProductList)
+            {
+                ProductUserVM.InquiryHeader.OrderTotal += (cart.Price * cart.TempQty);
+            }
 
             StringBuilder productListSB = new StringBuilder();
             foreach (var prod in ProductUserVM.ProductList)
@@ -188,8 +231,13 @@ namespace clothing_shop.Controllers
                 City = ProductUserVM.ApplicationUser.City,
                 State = ProductUserVM.ApplicationUser.State,
                 PostalCode = ProductUserVM.ApplicationUser.PostalCode,
-                InquiryDate = DateTime.Now
+                InquiryDate = System.DateTime.Now,
+                OrderTotal = ProductUserVM.InquiryHeader.OrderTotal,
+                PaymentStatus = WC.PaymentStatusPending,
+                OrderStatus = WC.StatusPending
             };
+
+            
 
             _inqHRepo.Add(inquiryHeader);
             await _inqHRepo.SaveAsync();
@@ -214,16 +262,73 @@ namespace clothing_shop.Controllers
                 await _inqDRepo.SaveAsync();
             }
 
-            return RedirectToAction(nameof(InquiryConfirmation));
+
+            var domain = "https://localhost:7061/";
+            var options = new Stripe.Checkout.SessionCreateOptions
+            {
+                SuccessUrl = domain + $"Cart/InquiryConfirmation?id={inquiryHeader.Id}",
+                CancelUrl = domain + "Cart/index",
+                LineItems = new List<Stripe.Checkout.SessionLineItemOptions>(),
+                Mode = "payment",
+            };
+
+            foreach (var item in ProductUserVM.ProductList)
+            {
+                var sessionLineItem = new SessionLineItemOptions
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = (long)(item.Price * 100), //20.50 => 2050
+                        Currency = "eur",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = item.ProductName
+                        }
+                    },
+                    Quantity = item.TempQty
+                };
+                options.LineItems.Add(sessionLineItem);
+            }
+
+            var service = new Stripe.Checkout.SessionService();
+            Session session = service.Create(options);
+            _inqHRepo.UpdateStripePaymentID(inquiryHeader.Id, session.Id, session.PaymentIntentId);
+            _inqHRepo.Save();
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+
+
+            //return RedirectToAction(nameof(InquiryConfirmation));
         }
-        public IActionResult InquiryConfirmation(ProductUserVM ProductUserVM)
+        public IActionResult InquiryConfirmation(/*ProductUserVM ProductUserVM*/ int id)
         {
-            HttpContext.Session.Clear();
+            //HttpContext.Session.Clear();
+            InquiryHeader inquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == id, includeProperties: "ApplicationUser", isTracking: false);
+            if(inquiryHeader.PaymentStatus != WC.PaymentStatusDelayedPayment) 
+            { 
+                var service = new SessionService();
+                Session session = service.Get(inquiryHeader.SessionId);
 
-            return View();
+                if(session.PaymentStatus.ToLower() == "paid")
+                {
+                    _inqHRepo.UpdateStripePaymentID(id, session.Id, session.PaymentIntentId);
+                    _inqHRepo.UpdateStatus(id, WC.StatusApproved, WC.PaymentStatusApproved);
+                    _inqHRepo.Save();
+                }
+
+                HttpContext.Session.Clear();
+            }
+
+            List<ShoppingCart> shoppingCarts = _cartRepo
+                .GetAll(u=>u.ApplicationUserId == inquiryHeader.ApplicationUserId).ToList();
+
+            _cartRepo.RemoveRange(shoppingCarts);
+            _cartRepo.Save();
+
+            return View(id);
         }
 
-        public IActionResult Remove(int id)
+        public IActionResult Remove(int productId, int sizeId)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
             if(HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart)!=null 
@@ -232,7 +337,7 @@ namespace clothing_shop.Controllers
                 //session exsits
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
-            var itemToRemove = shoppingCartList.FirstOrDefault(u => u.ProductId == id);
+            var itemToRemove = shoppingCartList.FirstOrDefault(u => u.ProductId == productId && u.SizeId == sizeId);
             if (itemToRemove != null)
             {
                 shoppingCartList.Remove(itemToRemove);
@@ -253,8 +358,10 @@ namespace clothing_shop.Controllers
             }
 
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
-            return RedirectToAction(nameof(Index));
-        }
+			return Json(new { success = true });
+		}
 
-	}
+
+
+    }
 }

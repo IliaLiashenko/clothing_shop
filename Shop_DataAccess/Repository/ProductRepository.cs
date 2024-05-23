@@ -135,5 +135,40 @@ namespace Shop_DataAccess.Repository
                 .Select(ps => new SelectListItem { Value = ps.SizeId.ToString(), Text = ps.Size.Name })
                 .ToList();
         }
-    }
+
+        public Dictionary<int, int> GetAvailableQuantitiesForProduct(int productId)
+        {
+            var productSizes = _db.ProductSizes
+                                       .Where(ps => ps.ProductId == productId)
+                                       .Include(ps => ps.Size)
+                                       .ToList();
+
+            var availableQuantities = new Dictionary<int, int>();
+
+            foreach (var productSize in productSizes)
+            {
+                availableQuantities[productSize.SizeId] = productSize.AvailableQuantity;
+            }
+
+            return availableQuantities;
+        }
+
+
+
+		public Dictionary<int, int> GetAvailableQuantitiesForProductAndSize(int productId, int sizeId)
+		{
+			var productSize = _db.ProductSizes
+								  .FirstOrDefault(ps => ps.ProductId == productId && ps.SizeId == sizeId);
+			var availableQuantities = new Dictionary<int, int>();
+			if (productSize != null)
+			{
+				availableQuantities[productSize.SizeId] = productSize.AvailableQuantity;
+			}
+			else
+			{
+				return new Dictionary<int, int> { { sizeId, 0 } };
+			}
+			return availableQuantities;
+		}
+	}
 }

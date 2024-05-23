@@ -14,7 +14,8 @@ namespace Shop_Models.ViewModels
 
         [Display(Name = "Size")]
         public Size Size { get; set; }
-
         public IEnumerable<SelectListItem> SizeSelectList { get; set; }
+
+        public Dictionary<int, int> AvailableQuantities { get; set; }
     }
 }
