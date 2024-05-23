@@ -12,15 +12,15 @@ using Shop_DataAccess;
 namespace Shop_DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240114120837_PushOrderHeaderAndDetailToDb")]
-    partial class PushOrderHeaderAndDetailToDb
+    [Migration("20240403130815_AddOrderTotalToInquiryHeader")]
+    partial class AddOrderTotalToInquiryHeader
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -264,7 +264,7 @@ namespace Shop_DataAccess.Migrations
                     b.ToTable("Colors");
                 });
 
-            modelBuilder.Entity("Shop_Models.OrderDetail", b =>
+            modelBuilder.Entity("Shop_Models.InquiryDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -272,60 +272,63 @@ namespace Shop_DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("OrderHeaderId")
+                    b.Property<int>("InquiryHeaderId")
                         .HasColumnType("int");
-
-                    b.Property<double>("PricePerUnit")
-                        .HasColumnType("float");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ProductQuantity")
+                    b.Property<int>("Qty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SizeId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderHeaderId");
+                    b.HasIndex("InquiryHeaderId");
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderDetail");
+                    b.HasIndex("SizeId");
+
+                    b.ToTable("InquiryDetail");
                 });
 
-            modelBuilder.Entity("Shop_Models.OrderHeader", b =>
+            modelBuilder.Entity("Shop_Models.InquiryHeader", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Carrier")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("FinalOrderTotal")
-                        .HasColumnType("float");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("OrderDate")
+                    b.Property<DateTime>("InquiryDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OrderStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("OrderTotal")
+                        .HasColumnType("float");
 
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("datetime2");
@@ -333,12 +336,21 @@ namespace Shop_DataAccess.Migrations
                     b.Property<DateTime>("PaymentDueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PaymentIntentId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SessionId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ShippingDate")
@@ -352,15 +364,14 @@ namespace Shop_DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TransactionId")
-                        .IsRequired()
+                    b.Property<string>("TrackingNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
+                    b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("OrderHeader");
+                    b.ToTable("InquiryHeader");
                 });
 
             modelBuilder.Entity("Shop_Models.Product", b =>
@@ -384,8 +395,8 @@ namespace Shop_DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
 
                     b.Property<string>("ProductDescription")
                         .IsRequired()
@@ -501,11 +512,11 @@ namespace Shop_DataAccess.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Shop_Models.OrderDetail", b =>
+            modelBuilder.Entity("Shop_Models.InquiryDetail", b =>
                 {
-                    b.HasOne("Shop_Models.OrderHeader", "OrderHeader")
+                    b.HasOne("Shop_Models.InquiryHeader", "InquiryHeader")
                         .WithMany()
-                        .HasForeignKey("OrderHeaderId")
+                        .HasForeignKey("InquiryHeaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -515,20 +526,26 @@ namespace Shop_DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OrderHeader");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Shop_Models.OrderHeader", b =>
-                {
-                    b.HasOne("Shop_Models.ApplicationUser", "CreatedBy")
+                    b.HasOne("Shop_Models.Size", "Size")
                         .WithMany()
-                        .HasForeignKey("CreatedByUserId")
+                        .HasForeignKey("SizeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedBy");
+                    b.Navigation("InquiryHeader");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Size");
+                });
+
+            modelBuilder.Entity("Shop_Models.InquiryHeader", b =>
+                {
+                    b.HasOne("Shop_Models.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Shop_Models.Product", b =>

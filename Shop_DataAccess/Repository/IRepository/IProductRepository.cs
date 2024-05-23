@@ -26,5 +26,9 @@ namespace Shop_DataAccess.Repository.IRepository
         bool Any(Expression<Func<Product, bool>> filter);
         List<SelectListItem> GetProductSizesDropdownList(int productId);
 
-    }
+        Dictionary<int, int> GetAvailableQuantitiesForProduct(int productId);
+
+        Dictionary<int, int> GetAvailableQuantitiesForProductAndSize(int productId, int sizeId);
+
+	}
 }

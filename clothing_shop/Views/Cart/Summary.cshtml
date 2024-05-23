@@ -1,7 +1,7 @@
 ﻿@model Shop_Models.ViewModels.ProductUserVM
 
 
-<form method="post">
+<form method="post" id="payment-form">
     <br />
     <div class="backgroundWhiteBorder">
         <div class="container">
@@ -97,6 +97,9 @@
                                         {
                                             <input type="hidden" asp-for="@Model.ProductList[i].Id" />
                                             <input type="hidden" asp-for="@Model.ProductList[i].ProductName" />
+                                            <input type="hidden" asp-for="@Model.ProductList[i].Price" />
+                                            <input type="hidden" asp-for="@Model.ProductList[i].Size" />
+                                            <input type="hidden" asp-for="@Model.ProductList[i].TempQty" />
                                             <li class="list-group-item d-flex justify-content-between">
                                                 <div>
                                                     <h6 class="my-0">@Model.ProductList[i].ProductName</h6>
@@ -113,6 +116,17 @@
                                         </li>
                                     </ul>
                                 </div>
+                                @if (User.IsInRole(Shop_Utility.WC.AdminRole))
+                                {
+                                    <div class="col-12">
+                                        <div class="wrapper">
+                                            <div class="checkout container">
+                                                <div id="dropin-container"></div>
+                                                <input id="nonce" name="payment_method_nonce" type="hidden"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -132,4 +146,5 @@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />
+    
 }

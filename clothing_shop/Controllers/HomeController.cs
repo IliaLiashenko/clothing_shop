@@ -9,6 +9,7 @@ using System.Diagnostics;
 using Shop_DataAccess.Repository.IRepository;
 using Microsoft.CodeAnalysis;
 using Shop_DataAccess.Repository;
+using dotless.Core.Parser.Infrastructure;
 
 namespace clothing_shop.Controllers
 {
@@ -17,6 +18,8 @@ namespace clothing_shop.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IProductRepository _prodRepo;
         private readonly ICategoryRepository _catRepo;
+        private readonly ISizeRepository _sizeRepo;
+        private readonly IProductSizeRepository _prodSizeRepo;
 
         public HomeController(ILogger<HomeController> logger, IProductRepository prodRepo, 
             ICategoryRepository catRepo)
@@ -39,7 +42,7 @@ namespace clothing_shop.Controllers
 
         public IActionResult Main()
         {
-            
+
             return View("Main");
         }
 
@@ -52,12 +55,14 @@ namespace clothing_shop.Controllers
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
             var sizes = _prodRepo.GetProductSizesDropdownList(Id);
+            var availableQuantities = _prodRepo.GetAvailableQuantitiesForProduct(Id);
 
             DetailsVM DetailsVM = new DetailsVM()
             {
                 Product = _prodRepo.FirstOrDefault(u => u.Id == Id, includeProperties: "Category"),
                 ExistsInCart = shoppingCartList.Any(item => item.ProductId == Id),
-                SizeSelectList = new SelectList(sizes, "Value", "Text")
+                SizeSelectList = new SelectList(sizes, "Value", "Text"),
+                AvailableQuantities = availableQuantities
             };
 
             return View(DetailsVM);
@@ -67,15 +72,42 @@ namespace clothing_shop.Controllers
         [HttpPost, ActionName("Details")]
         public IActionResult DetailsPost(int id, DetailsVM detailsVM)
         {
+
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
 
             if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
                 && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
             {
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
+
             }
 
-            shoppingCartList.Add(new ShoppingCart { ProductId = id, SizeId = detailsVM.Size.Id, Qty =  detailsVM.Product.TempQty});
+            var availableQty = _prodRepo.GetAvailableQuantitiesForProduct(id)
+        .GetValueOrDefault(detailsVM.Size.Id, 0);
+
+            if (detailsVM.Product.TempQty > availableQty)
+            {
+                detailsVM.Product.TempQty = availableQty;
+            }
+
+            var existingItem = shoppingCartList.FirstOrDefault(item => item.ProductId == id && item.SizeId == detailsVM.Size.Id);
+
+            if (existingItem != null)
+            {
+                var newQty = existingItem.Qty + detailsVM.Product.TempQty;
+                if (newQty > availableQty)
+                {
+                    existingItem.Qty = availableQty;
+                }
+                else
+                {
+                    existingItem.Qty = newQty;
+                }
+            }
+            else
+            {
+                shoppingCartList.Add(new ShoppingCart { ProductId = id, SizeId = detailsVM.Size.Id, Qty = detailsVM.Product.TempQty });
+            }
 
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
 

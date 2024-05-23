@@ -6,7 +6,6 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="~/css/site.css" />
-
 </head>
 <body>
     <form method="post">
@@ -30,28 +29,51 @@
         <div class="product-container">
             
             <div class="product-image">
-                <img src="@WC.ImagePath@Model.Product.Image">
+                <img src="@WC.ImagePath@Model.Product.Image" width="100%">
             </div>
             <div class="product-description">
                 <div class="row align-center">
                     <div class="product-details column medium-6 center-text-for-small-only">
-                        <h1>@Model.Product.ProductName</h1>
+                        <h2>@Model.Product.ProductName</h2>
                         <p class="product-description">@Model.Product.ProductDescription</p>
 
                         <div class="product-details-add-to-cart">
                             
                             @{
                                 int priceAsInt = (int)Model.Product.Price;
+                                int availableQty = 0;
                             }
                             <p class="price">€@priceAsInt</p>
                             <div class="column small-12 large-6">
                                 <h6 class="product-color-title">Size</h6>
-                                <select asp-for="Size.Id" asp-items="@Model.SizeSelectList" class="form-control"></select>
-                                <br /><span>Qty:</span> <input asp-for="@Model.Product.TempQty" class="qty">
+                                <select asp-for="@Model.Size.Id" class="form-control">
+                                    @foreach (var size in Model.SizeSelectList)
+                                    {
+                                        int sizeId = Convert.ToInt32(size.Value);
+                                        availableQty = Model.AvailableQuantities.ContainsKey(sizeId) ? Model.AvailableQuantities[sizeId] : 0;
+
+                                        <option value="@size.Value" data-available-qty="@availableQty">
+                                            @size.Text
+                                            @if (availableQty <= 10)
+                                            {
+                                                <span>(only @availableQty left in stock)</span>
+                                            }
+                                        </option>
+                                    }
+                                </select>
+                                <br />
+                                <span>Qty:</span> 
+                                <select asp-for="Product.TempQty" class="qty">
+                                    @for (int i = 1; i <= 10; i++)
+                                    {
+                                        <option value="@i">@i</option>
+                                    }
+                                </select>
                                 <span asp-validation-for="@Model.Product.TempQty" class="text-danger"></span>
+                                <span class="error-message text-danger"></span>
                             </div>
                             <br />
-                            <button type="submit" asp-route-id="@Model.Product.Id" class="btn btn-dark form-control" >Add to Cart</button>
+                            <button type="submit" id="addToCartBtn" asp-route-id="@Model.Product.Id" class="btn btn-dark form-control">Add to Cart</button>
 
                             
                             
@@ -62,9 +84,11 @@
             </div>
         </div>
 
-        
     </form>
 </body>
 </html>
 
-    
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/homeDetails.js"></script>
+}

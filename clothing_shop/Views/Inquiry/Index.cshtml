@@ -1,13 +1,62 @@
-﻿<br />
+﻿@{
+    var status = Context.Request.Query["status"];
+    var pending = "text-dark";
+    var inprocess = "text-dark";
+    var completed = "text-dark";
+    var approved = "text-dark";
+    var all = "text-dark";
+
+    switch (status)
+    {
+        case "pending":
+            pending = "text-white bg-dark";
+            break;
+        case "inprocess":
+            inprocess = "text-white bg-dark";
+            break;
+        case "completed":
+            completed = "text-white bg-dark";
+            break;
+        case "approved":
+            approved = "text-white bg-dark";
+            break;
+        default:
+            all = "text-white bg-dark";
+            break;
+
+    }
+}
+
+
+<br />
 <div class="border p-3 bg-white">
     <div class="d-flex justify-content-between mb-3">
         <div class="p-2">
-            <h2 class="text-dark">Inquiry's List </h2>
+            <h2 class="text-dark">Inquiry List </h2>
         </div>
 
     </div>
 
-
+    <div class="d-flex justify-content-between pb-5 pt-2">
+        <span></span>
+        <ul class="list-group list-group-horizontal-sm">
+            <a style="text-decoration:none;" asp-controller="Inquiry" asp-action="Index" asp-route-status="inprocess">
+            <li class="list-group-item @inprocess">In Process</li>
+            </a>
+            <a style="text-decoration:none;" asp-controller="Inquiry" asp-action="Index" asp-route-status="pending">
+            <li class="list-group-item @pending">Payment Pending</li>
+            </a>
+            <a style="text-decoration:none;" asp-controller="Inquiry" asp-action="Index" asp-route-status="completed">
+            <li class="list-group-item @completed">Completed</li>
+            </a>
+            <a style="text-decoration:none;" asp-controller="Inquiry" asp-action="Index" asp-route-status="approved">
+            <li class="list-group-item @approved">Approved</li>
+            </a>
+            <a style="text-decoration:none;" asp-controller="Inquiry" asp-action="Index" asp-route-status="all">
+            <li class="list-group-item @all">All</li>
+            </a>
+        </ul>
+    </div>
     <table id="tblData" class="table table-striped table-bordered pt-2" style="width:100%">
         <thead class="dark">
             <tr class="table-light">
@@ -15,6 +64,8 @@
                 <th>Name</th>
                 <th>Phone Number</th>
                 <th>Email</th>
+                <th>Status</th>
+                <th>Total</th>
                 <th></th>
             </tr>
         </thead>
@@ -23,5 +74,5 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/inquiry.js"></script>
+    <script src="~/js/inquiry.js?v=3"></script>
 }

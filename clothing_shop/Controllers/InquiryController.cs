@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Shop_DataAccess.Repository.IRepository;
 using System.Text;
+using dotless.Core.Parser.Tree;
 
 namespace clothing_shop.Controllers
 {
@@ -33,7 +34,7 @@ namespace clothing_shop.Controllers
         {
             InquiryVM = new InquiryVM()
             {
-                InquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == id),
+                InquiryHeader = _inqHRepo.FirstOrDefault(u => u.Id == id, includeProperties:"ApplicationUser"),
                 InquiryDetail = _inqDRepo.GetAll(u => u.InquiryHeaderId == id, includeProperties: "Product,Size")
             };
             return View(InquiryVM);
@@ -77,10 +78,32 @@ namespace clothing_shop.Controllers
 
         #region API CALLS
         [HttpGet]
-        public IActionResult GetInquiryList()
+        public IActionResult GetAll(string status)
         {
-            return Json(new { data = _inqHRepo.GetAll() });
+            IEnumerable<InquiryHeader> objInquiryHeaders = _inqHRepo.GetAll(includeProperties: "ApplicationUser").ToList();
+
+            switch (status)
+            {
+                case "pending":
+                    objInquiryHeaders = objInquiryHeaders.Where(u => u.PaymentStatus == WC.PaymentStatusPending);
+                    break;
+                case "inprocess":
+                    objInquiryHeaders = objInquiryHeaders.Where(u => u.OrderStatus == WC.StatusInProcess);
+                    break;
+                case "completed":
+                    objInquiryHeaders = objInquiryHeaders.Where(u => u.OrderStatus == WC.StatusShipped);
+                    break;
+                case "approved":
+                    objInquiryHeaders = objInquiryHeaders.Where(u => u.OrderStatus == WC.StatusApproved);
+                    break;
+                default:
+                    break;
+            }
+
+            return Json(new { data = objInquiryHeaders });
         }
+
+
 
         #endregion
     }

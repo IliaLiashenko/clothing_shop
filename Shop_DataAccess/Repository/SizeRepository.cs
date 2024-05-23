@@ -44,5 +44,6 @@ namespace Shop_DataAccess.Repository
         {
             return _db.Size.FirstOrDefault(s => s.Id == sizeId);
         }
+
     }
 }

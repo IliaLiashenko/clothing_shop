@@ -51,7 +51,6 @@ namespace Shop_Models
         [ValidateNever]
         public Size Size { get; set; }
         [NotMapped]
-        [Range(1, 50)]
         public int TempQty { get; set; }
 
     }

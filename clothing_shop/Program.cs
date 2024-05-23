@@ -2,12 +2,17 @@ using Shop_DataAccess;
 using Shop_Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Shop_DataAccess.Repository.IRepository;
 using Shop_DataAccess.Repository;
 using NLog;
 using NLog.Web;
 using NLog.Extensions.Logging;
+using Stripe;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +53,8 @@ builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<IInquiryHeaderRepository, InquiryHeaderRepository>();
 builder.Services.AddScoped<IInquiryDetailRepository, InquiryDetailRepository>();
 builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
+builder.Services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+builder.Services.AddScoped<IProductSizeRepository, ProductSizeRepository>();
 
 
 builder.Services.AddHttpContextAccessor();
@@ -58,6 +65,9 @@ builder.Services.AddSession(Options =>
     Options.Cookie.IsEssential = true;
 });
 
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
+//builder.Services.Configure<BrainTreeSettings>(builder.Configuration.GetSection("BrainTree"));
+//builder.Services.AddSingleton<IBrainTreeGate, BrainTreeGate>();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddDefaultTokenProviders().AddDefaultUI()
     .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -86,7 +96,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

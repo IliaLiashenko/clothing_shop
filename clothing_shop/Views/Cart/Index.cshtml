@@ -1,14 +1,16 @@
-﻿@model List<Product>
+﻿
+@model Shop_Models.ViewModels.ProductUserVM
+
 @using Shop_Utility
 
 
-@if (Model.Count() > 0)
+@if (Model.ProductList.Count() > 0)
 {
 	<form method="post">
 		<div class="container mt-4">
 			<div class="card">
 				<div class="card-header d-flex justify-content-between align-items-center">
-					<span style="font-weight: bold;">Shopping Cart</span>
+					<span>Shopping Cart</span>
 					<a asp-action="Index" asp-controller="Home" class="btn btn-outline-dark">Continue Shopping</a>
 				</div>
 
@@ -17,29 +19,48 @@
 					<hr />
 					@{
 						var orderTotal = 0.0;
+						
 					}
 
-					@for (int i = 0; i < Model.Count(); i++)
+					@for (int i = 0; i < Model.ProductList.Count(); i++)
 					{
-						<input hidden asp-for="@Model[i].Id" />
-						<input hidden asp-for="@Model[i].Size" />
-						<input hidden asp-for="@Model[i].Size.Id" />
-						<input hidden asp-for="@Model[i].Size.Name" />
-						<br />
+						<input hidden asp-for="@Model.ProductList[i].Id" />
+						<input hidden asp-for="@Model.ProductList[i].Size" />
+						<input hidden asp-for="@Model.ProductList[i].Size.Id" />
+						<input hidden asp-for="@Model.ProductList[i].Size.Name" />
+						
 						<div class="row">
 							<div class="col-md-4">
-								<img src="@WC.ImagePath@Model[i].Image" class="rounded mx-auto d-block" style="width: 55%; height: auto;" alt="Product Image" />
+								<img src="@WC.ImagePath@Model.ProductList[i].Image" class="rounded mx-auto d-block" style="width: 55%; height: auto;" alt="Product Image" />
 							</div>
 							<div class="col-md-4">
-								<h4>@Model[i].ProductName</h4>
-								<p>@Model[i].ProductDescription</p>
-								<p><strong>Price:</strong> €@Model[i].Price</p>
-								<p><strong>Size:</strong> @Model[i].Size.Name</p>
+								<h4>@Model.ProductList[i].ProductName</h4>
+								<p>@Model.ProductList[i].ProductDescription</p>
+								<p><strong>Price:</strong> €@Model.ProductList[i].Price</p>
+								<p><strong>Size:</strong> @Model.ProductList[i].Size.Name</p>
+								@{
+									int sizeId = Model.ProductList[i].Size.Id;
+									int productId = Model.ProductList[i].Id;
+									int availableQty = Model.AvailableQuantities.ContainsKey(productId) && Model.AvailableQuantities[productId].ContainsKey(sizeId) ? Model.AvailableQuantities[productId][sizeId] : 0;
 
-								<p><strong>Qty:</strong> <input asp-for="@Model[i].TempQty" class="qty form-control-sm" /></p>
+									// if (sizeId == Model.ProductList[i].Size.Id)
+									// {
+									// 	<p><strong>Available Quantity:</strong> @availableQty</p>
+									// }
+								}
+								<p><strong>Qty:</strong>
+									<select asp-for="@Model.ProductList[i].TempQty" class="qty" 
+									id="qty-@Model.ProductList[i].Id" data-price="@Model.ProductList[i].Price" data-max-qty="@availableQty">
+										@for (int j = 1; j <= (availableQty >= 10 ? 10 : availableQty); j++)
+										{
+											<option value="@j">@j</option>
+										}
+									</select>
+									<span id="warning-message-@Model.ProductList[i].Id" class="warming-message text-danger"></span>
+								</p>
 								<br /><br />
 								<div class="col-md-4">
-									<a asp-action="Remove" asp-route-id="@Model[i].Id" class="btn btn-danger btn-sm">
+									<a asp-action="Remove" asp-route-productId="@Model.ProductList[i].Id" asp-route-sizeId="@Model.ProductList[i].Size.Id" class="btn btn-danger btn-sm">
 										<i class="fas fa-trash-alt"></i> Delete
 									</a>
 								</div>
@@ -47,11 +68,11 @@
 							</div>
 							<div class="col-md-4">
 								<div class="text-right">
-									<p>€@(@Model[i].Price * @Model[i].TempQty)</p>
+									<p id="totalPrice-@Model.ProductList[i].Id" data-price="@Model.ProductList[i].Price">€@(@Model.ProductList[i].Price * @Model.ProductList[i].TempQty)</p>
 								</div>
 							</div>
 						</div>
-						orderTotal += @Model[i].Price * @Model[i].TempQty;
+						orderTotal += @Model.ProductList[i].Price * @Model.ProductList[i].TempQty;
 						<br />
 						<hr />
 
@@ -62,12 +83,8 @@
 					<div class="row justify-content-end">
 
 						<div class="col-6 col-md-3">
-							<p><strong>Order Total:</strong> €@orderTotal</p>
+							<p><strong>Order Total:</strong> <span id="orderTotal">€@Model.ProductList.Sum(p => p.Price * p.TempQty)</span></p>
 							<div class="row">
-								<div class="col-6">
-									<input type="submit" asp-action="UpdateCart" formmethod="post" name="Update" value="Update Cart"
-										   class="btn btn-outline-dark form-control" />
-								</div>
 								<div class="col-6">
 									<button type="submit" class="btn btn-dark form-control ">
 										<span>Continue</span>
@@ -88,3 +105,53 @@ else
 	<p>Cart is empty!</p>
 }
 
+@section Scripts {
+	<script>
+		$(document).ready(function () {
+			$('.qty').each(function () {
+				var productId = $(this).attr('id').split('-')[1];
+				var qty = $(this).val();
+				var maxQty = parseInt($('#qty-' + productId).data('max-qty'));
+				var price = parseFloat($('#totalPrice-' + productId).data('price'));
+
+				if (qty >= maxQty) {
+					$('#warning-message-' + productId).text('Selected maximum quantity');
+				}
+			});
+
+			$('.qty').change(function () {
+				var productId = $(this).attr('id').split('-')[1];
+				var qty = $(this).val();
+				var maxQty = parseInt($('#qty-' + productId).data('max-qty'));
+				var price = parseFloat($('#totalPrice-' + productId).data('price'));
+				$('#totalPrice-' + productId).text('€' + (price * $(this).val()));
+				updateOrderTotal();
+
+				if (qty >= maxQty) {
+					$(this).val(maxQty);
+					qty = maxQty;
+					$('#warning-message-' + productId).text('Selected maximum quantity');
+				}
+				else {
+					$('#warning-message-' + productId).text('');
+				}
+
+				$('#totalPrice-' + productId).text('€' + (price * qty));
+				updateOrderTotal();
+			});
+		});
+
+		function updateOrderTotal() {
+			var orderTotal = 0;
+			$('.qty').each(function () {
+				var productId = $(this).attr('id').split('-')[1];
+				var qty = parseInt($(this).val());
+
+				var price = parseFloat($('#totalPrice-' + productId).data('price'));
+				orderTotal += price * qty;
+			});
+			$('#orderTotal').text('€' + Math.floor(orderTotal));
+		}
+	</script>
+
+}
