@@ -3,6 +3,7 @@
     public static class WC //web constants
     {
         public const string ImagePath = @"\images\product\";
+        public const string GalleryPath = @"\images\product\gallery";
 
         public const string SessionCart = "ShoppingCartSession";
         public const string SessionInquiryId = "InquirySession";
@@ -27,5 +28,8 @@
         public const string CategoryName = "Category";
         public const string ColorsName = "Colors";
         public const string SizeName = "Size";
+        public const string GenderName = "Genders";
+        public const string BrandName = "Brands";
+        public const string StyleName = "Styles";
     }
 }

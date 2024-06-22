@@ -11,5 +11,7 @@ namespace Shop_DataAccess.Repository.IRepository
     public interface IProductSizeRepository : IRepository<ProductSize>
     {
         int GetAvailableQuantity(int productId, int sizeId);
+        void Update(ProductSize productSize);
+        void Save();
     }
 }

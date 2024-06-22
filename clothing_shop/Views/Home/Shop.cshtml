@@ -1,0 +1,213 @@
+﻿@model Shop_Models.ViewModels.HomeVM
+
+@{
+    ViewData["Title"] = "Shop";
+}
+
+<h2>Shop</h2>
+
+<div class="container">
+    <form id="filterForm" asp-action="Shop" method="get">
+        <div class="form-row custom-form-row">
+            <div class="form-group col-md-2">
+                <label for="SelectedGender">Gender</label>
+                <select class="form-control" id="SelectedGender" name="Filters.SelectedGender">
+                    <option value="">All</option>
+                    @foreach (var gender in Model.Genders)
+                    {
+                        <option value="@gender.Id">@gender.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SelectedStyle">Style</label>
+                <select class="form-control" id="SelectedStyle" name="Filters.SelectedStyle">
+                    <option value="">All</option>
+                    @foreach (var style in Model.Styles)
+                    {
+                        <option value="@style.Id">@style.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SelectedCategory">Category</label>
+                <select class="form-control" id="SelectedCategory" name="Filters.SelectedCategory">
+                    <option value="">All</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SelectedColor">Color</label>
+                <select class="form-control" id="SelectedColor" name="Filters.SelectedColor">
+                    <option value="">All</option>
+                    @foreach (var color in Model.Colors)
+                    {
+                        <option value="@color.Id">@color.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SelectedBrand">Brand</label>
+                <select class="form-control" id="SelectedBrand" name="Filters.SelectedBrand">
+                    <option value="">All</option>
+                    @foreach (var brand in Model.Brands)
+                    {
+                        <option value="@brand.Id">@brand.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SelectedSize">Size</label>
+                <select class="form-control" id="SelectedSize" name="Filters.SelectedSize">
+                    <option value="">All</option>
+                    @foreach (var size in Model.Sizes)
+                    {
+                        <option value="@size.Id">@size.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label>Price Range</label>
+                <div class="d-flex">
+                    <input type="number" class="form-control price-input" id="MinPrice" name="Filters.MinPrice" value="@Model.Filters.MinPrice" placeholder="Min" style="margin-right: 15px;"/>
+                    <input type="number" class="form-control price-input" id="MaxPrice" name="Filters.MaxPrice" value="@Model.Filters.MaxPrice" placeholder="Max" />
+                </div>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label for="SortOrder">Sort By</label>
+                <select class="form-control sort-select" id="SortOrder" name="Filters.SortOrder">
+                    <option value="">Select</option>
+                    <option value="az">A-Z</option>
+                    <option value="za">Z-A</option>
+                    <option value="min-max">Min-Max Price</option>
+                    <option value="max-min">Max-Min Price</option>
+                    <option value="newest">Newest</option>
+                </select>
+            </div>
+            <div class="form-group col-md-2 align-self-end">
+                <button type="submit" class="btn btn-primary" style="margin-right: 10px;">Filter</button>
+                <button type="button" class="btn btn-secondary ml-2" id="resetFilters">Reset</button>
+            </div>
+        </div>
+    </form>
+
+    <br />
+
+    <div class="row">
+        @foreach (var product in Model.Products)
+        {
+            <partial name="_IndividualProductCard" model="product" />
+        }
+    </div>
+
+    <button id="scrollToTopBtn">↑</button>
+
+</div>
+
+
+<style>
+    .custom-form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .form-group {
+        flex: 1 0 14%;
+        box-sizing: border-box;
+    }
+
+    .align-self-end {
+        align-self: flex-end;
+    }
+
+    .d-flex {
+        display: flex;
+    }
+
+
+    .price-input {
+        width: 25%; 
+    }
+
+    .sort-select {
+        width: 50%;
+    }
+
+    .dropdown-menu {
+        width: 300px;
+    }
+
+        .dropdown-menu .form-group {
+            margin-bottom: 10px;
+        }
+
+    #scrollToTopBtn {
+        display: none;
+        position: fixed;
+        bottom: 200px; 
+        right: 200px; 
+        z-index: 99; 
+        border: none; 
+        outline: none; 
+        background-color: #555; 
+        color: white; 
+        cursor: pointer; 
+        padding: 7px 20px; 
+        font-size: 24px; 
+    }
+
+        #scrollToTopBtn:hover {
+            background-color: #333;
+        }
+</style>
+
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            $("#SelectedGender").val("@Model.Filters.SelectedGender");
+            $("#SelectedStyle").val("@Model.Filters.SelectedStyle");
+            $("#SelectedCategory").val("@Model.Filters.SelectedCategory");
+            $("#SelectedColor").val("@Model.Filters.SelectedColor");
+            $("#SelectedBrand").val("@Model.Filters.SelectedBrand");
+            $("#SelectedSize").val("@Model.Filters.SelectedSize");
+            $("#SortOrder").val("@Model.Filters.SortOrder");
+
+            $("#resetFilters").click(function () {
+
+                window.location.href = "@Url.Action("Shop", "Home")?resetFilters=true";
+            });
+
+            $(window).scroll(function () {
+                if ($(this).scrollTop() > 200) { 
+                    $('#scrollToTopBtn').fadeIn();
+                } else {
+                    $('#scrollToTopBtn').fadeOut();
+                }
+            });
+
+            
+            $('#scrollToTopBtn').click(function () {
+                $('html, body').animate({ scrollTop: 0 }, 100);
+                return false;
+            });
+        });
+
+
+    </script>
+
+}

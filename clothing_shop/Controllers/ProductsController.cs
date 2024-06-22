@@ -64,6 +64,9 @@ namespace clothing_shop.Controllers
                 CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName),
                 ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName),
                 SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName),
+                GenderSelectList = _prodRepo.GetAllDropdownList(WC.GenderName),
+                BrandSelectList = _prodRepo.GetAllDropdownList(WC.BrandName),
+                StyleSelectList = _prodRepo.GetAllDropdownList(WC.StyleName),
                 AvailableQuantities = new Dictionary<int, int>()
             };
             return View(productVM);
@@ -85,15 +88,43 @@ namespace clothing_shop.Controllers
                 string fileName = Guid.NewGuid().ToString();
                 string extension = Path.GetExtension(files[0].FileName);
 
+                var mainImageFile = files.FirstOrDefault(f => f.Name == "ProductImage");
                 using (var fileStream = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
                 {
-                    files[0].CopyTo(fileStream);
+                    mainImageFile.CopyTo(fileStream);
                 }
 
                 productVM.Product.Image = fileName + extension;
 
-
                 _prodRepo.Add(productVM.Product);
+                await _prodRepo.SaveAsync();
+
+                string galleryUploadPath = webRootPath + WC.GalleryPath;
+                foreach (var file in productVM.GalleryFiles)
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        string galleryFileName = Guid.NewGuid().ToString();
+                        string galleryExtension = Path.GetExtension(file.FileName);
+                        string galleryFilePath = Path.Combine(galleryUploadPath, galleryFileName + galleryExtension);
+
+                        using (var fileStream = new FileStream(galleryFilePath, FileMode.Create))
+                        {
+                            file.CopyTo(fileStream);
+                        }
+
+                        var photoGallery = new PhotoGallery
+                        {
+                            Url = Shop_Utility.WC.GalleryPath + "/" + galleryFileName + galleryExtension,
+                            ProductId = productVM.Product.Id
+                        };
+
+                        _prodRepo.AddPhotoToGallery(photoGallery);
+                    }
+
+                }
+
+
                 await _prodRepo.SaveAsync();
 
                 foreach (var sizeId in productVM.SelectedSizeIds)
@@ -116,6 +147,9 @@ namespace clothing_shop.Controllers
             productVM.CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName);
             productVM.ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName);
             productVM.SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName);
+            productVM.GenderSelectList = _prodRepo.GetAllDropdownList(WC.GenderName);
+            productVM.BrandSelectList = _prodRepo.GetAllDropdownList(WC.BrandName);
+            productVM.StyleSelectList = _prodRepo.GetAllDropdownList(WC.StyleName);
 
 
             return View(productVM);
@@ -135,8 +169,12 @@ namespace clothing_shop.Controllers
                 CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName),
                 ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName),
                 SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName),
+                GenderSelectList = _prodRepo.GetAllDropdownList(WC.GenderName),
+                BrandSelectList = _prodRepo.GetAllDropdownList(WC.BrandName),
+                StyleSelectList = _prodRepo.GetAllDropdownList(WC.StyleName),
                 AvailableQuantities = new Dictionary<int, int>(),
-                SelectedSizeIds = _prodRepo.GetSizesByProductId(id.GetValueOrDefault())
+                SelectedSizeIds = _prodRepo.GetSizesByProductId(id.GetValueOrDefault()),
+                GalleryPhotos = await _prodRepo.GetGalleryFiles(id.GetValueOrDefault()) ?? new List<PhotoGallery>()
             };
             foreach (var sizeId in productVM.SizeSelectList.Select(size => int.Parse(size.Value)))
             {
@@ -162,6 +200,7 @@ namespace clothing_shop.Controllers
 
         }
 
+
         // POST: Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -178,8 +217,8 @@ namespace clothing_shop.Controllers
                 {
                     return NotFound();
                 }
-
-                if (files.Count > 0)
+                var mainImageFile = files.FirstOrDefault(f => f.Name == "ProductImage");
+                if (mainImageFile != null)
                 {
                     string upload = webRootPath + Shop_Utility.WC.ImagePath;
                     string fileName = Guid.NewGuid().ToString();
@@ -194,7 +233,7 @@ namespace clothing_shop.Controllers
 
                     using (var fileStream = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
                     {
-                        files[0].CopyTo(fileStream);
+                        mainImageFile.CopyTo(fileStream);
                     }
                     productVM.Product.Image = fileName + extension;
                 }
@@ -210,6 +249,9 @@ namespace clothing_shop.Controllers
                 objFromDb.Image = productVM.Product.Image;
                 objFromDb.DisplayOrder = productVM.Product.DisplayOrder;
                 objFromDb.CategoryId = productVM.Product.CategoryId;
+                objFromDb.GenderId = productVM.Product.GenderId;
+                objFromDb.BrandId = productVM.Product.BrandId;
+                objFromDb.StyleId = productVM.Product.StyleId;
 
                 foreach (var sizeId in productVM.SelectedSizeIds)
                 {
@@ -244,9 +286,31 @@ namespace clothing_shop.Controllers
                     }
                 }
 
-                _prodRepo.Update(objFromDb);
+                if (productVM.GalleryFiles != null && productVM.GalleryFiles.Any())
+                {
+                    string galleryUploadPath = webRootPath + WC.GalleryPath;
+                    foreach (var file in productVM.GalleryFiles)
+                    {
+                        string fileName = Guid.NewGuid().ToString();
+                        string extension = Path.GetExtension(file.FileName);
 
-                //еще нужно обновить objFromDb
+                        using (var fileStream = new FileStream(Path.Combine(galleryUploadPath, fileName + extension), FileMode.Create))
+                        {
+                            file.CopyTo(fileStream);
+                        }
+
+                        var photoGallery = new PhotoGallery
+                        {
+                            Url = Path.Combine(WC.GalleryPath, fileName + extension),
+                            ProductId = productVM.Product.Id
+                        };
+
+                        _prodRepo.AddPhotoToGallery(photoGallery);
+                    }
+                }
+
+
+                _prodRepo.Update(objFromDb);
                 await _prodRepo.SaveAsync();
                 return RedirectToAction("Index");
             }
@@ -254,7 +318,71 @@ namespace clothing_shop.Controllers
             productVM.CategorySelectList = _prodRepo.GetAllDropdownList(WC.CategoryName);
             productVM.ColorsSelectList = _prodRepo.GetAllDropdownList(WC.ColorsName);
             productVM.SizeSelectList = _prodRepo.GetAllDropdownList(WC.SizeName);
+            productVM.GenderSelectList = _prodRepo.GetAllDropdownList(WC.GenderName);
+            productVM.BrandSelectList = _prodRepo.GetAllDropdownList(WC.BrandName);
+            productVM.StyleSelectList = _prodRepo.GetAllDropdownList(WC.StyleName);
+
             return View(productVM);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadGalleryPhotos(int productId, List<IFormFile> galleryFiles)
+        {
+            if (galleryFiles != null && galleryFiles.Count > 0)
+            {
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                string galleryPath = webRootPath + WC.GalleryPath;
+
+                foreach (var file in galleryFiles)
+                {
+                    if (file != null && file.Length > 0)
+                    {
+                        string galleryFileName = Guid.NewGuid().ToString();
+                        string galleryExtension = Path.GetExtension(file.FileName);
+                        string galleryFilePath = Path.Combine(galleryPath, galleryFileName + galleryExtension);
+
+                        using (var fileStream = new FileStream(galleryFilePath, FileMode.Create))
+                        {
+                            file.CopyTo(fileStream);
+                        }
+
+                        var photoGallery = new PhotoGallery
+                        {
+                            Url = WC.GalleryPath + "/" + galleryFileName + galleryExtension,
+                            ProductId = productId
+                        };
+
+                        _prodRepo.AddPhotoToGallery(photoGallery);
+                    }
+                }
+
+                await _prodRepo.SaveAsync();
+            }
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteGalleryPhoto(int id)
+        {
+            var photo = await _prodRepo.GetPhotoGalleryByIdAsync(id);
+            if (photo == null)
+            {
+                return Json(new { success = false, message = "Photo not found." });
+            }
+
+            var webRootPath = _webHostEnvironment.WebRootPath;
+            var filePath = Path.Combine(webRootPath, photo.Url.TrimStart('/'));
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            _prodRepo.RemovePhotoGallery(photo);
+            await _prodRepo.SaveAsync();
+
+            return Json(new { success = true, message = "Photo deleted successfully." });
         }
 
 

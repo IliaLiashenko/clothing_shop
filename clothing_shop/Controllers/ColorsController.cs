@@ -38,7 +38,7 @@ namespace clothing_shop.Controllers
             return View(colors);
         }
 
-        // GET: Categories/Edit/5
+        // GET: Colors/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Colors == null)
@@ -54,7 +54,7 @@ namespace clothing_shop.Controllers
             return View(colors);
         }
 
-        // POST: Categories/Edit/5
+        // POST: Colors/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -89,7 +89,7 @@ namespace clothing_shop.Controllers
             return View(colors);
         }
 
-        // GET: Categories/Delete/5
+        // GET: Colors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Colors == null)
@@ -107,7 +107,7 @@ namespace clothing_shop.Controllers
             return View(colors);
         }
 
-        // POST: Categories/Delete/5
+        // POST: Colors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

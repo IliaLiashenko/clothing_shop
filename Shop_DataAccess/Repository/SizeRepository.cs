@@ -45,5 +45,10 @@ namespace Shop_DataAccess.Repository
             return _db.Size.FirstOrDefault(s => s.Id == sizeId);
         }
 
+
+        public async Task<IEnumerable<Size>> GetAllAsync()
+        {
+            return await _db.Size.ToListAsync();
+        }
     }
 }

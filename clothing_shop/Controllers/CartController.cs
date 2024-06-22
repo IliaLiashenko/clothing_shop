@@ -19,6 +19,7 @@ namespace clothing_shop.Controllers
         private readonly IApplicationUserRepository _userRepo;
         private readonly IProductRepository _prodRepo;
         private readonly ISizeRepository _sizeRepo;
+        private readonly IProductSizeRepository _prodSizeRepo;
         private readonly IInquiryHeaderRepository _inqHRepo;
         private readonly IInquiryDetailRepository _inqDRepo;
         private readonly IShoppingCartRepository _cartRepo;
@@ -26,13 +27,14 @@ namespace clothing_shop.Controllers
         [BindProperty]
         public ProductUserVM ProductUserVM { get; set; }
         public CartController(IWebHostEnvironment webHostEnvironment, IApplicationUserRepository userRepo, 
-            IProductRepository prodRepo, ISizeRepository sizeRepo,
+            IProductRepository prodRepo, ISizeRepository sizeRepo, IProductSizeRepository prodSizeRepo,
             IInquiryHeaderRepository inqHRepo, IInquiryDetailRepository inqDRepo, IShoppingCartRepository cartRepo)
         {
             _webHostEnvironment = webHostEnvironment;
             _userRepo = userRepo;
             _prodRepo = prodRepo;
             _sizeRepo = sizeRepo;
+            _prodSizeRepo = prodSizeRepo;
             _inqHRepo = inqHRepo;
             _inqDRepo = inqDRepo;
             _cartRepo = cartRepo;
@@ -99,10 +101,10 @@ namespace clothing_shop.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Index")]
-        public IActionResult IndexPost(IEnumerable<Product> ProdList)
+        public IActionResult IndexPost(ProductUserVM productUserVM)
         {
 			List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-			foreach (Product prod in ProdList)
+			foreach (var prod in productUserVM.ProductList)
 			{
 				shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Qty = prod.TempQty, SizeId = prod.Size.Id });
 			}
@@ -263,7 +265,7 @@ namespace clothing_shop.Controllers
             }
 
 
-            var domain = "https://localhost:7061/";
+            var domain = "https://localhost:44333/";
             var options = new Stripe.Checkout.SessionCreateOptions
             {
                 SuccessUrl = domain + $"Cart/InquiryConfirmation?id={inquiryHeader.Id}",
@@ -314,6 +316,20 @@ namespace clothing_shop.Controllers
                     _inqHRepo.UpdateStripePaymentID(id, session.Id, session.PaymentIntentId);
                     _inqHRepo.UpdateStatus(id, WC.StatusApproved, WC.PaymentStatusApproved);
                     _inqHRepo.Save();
+
+                    List<InquiryDetail> inquiryDetails = _inqDRepo.GetAll(u => u.InquiryHeaderId == id).ToList();
+                    foreach (var detail in inquiryDetails)
+                    {
+                        ProductSize productSize = _prodSizeRepo.FirstOrDefault(
+                    u => u.ProductId == detail.ProductId && u.SizeId == detail.SizeId);
+
+                        if (productSize != null)
+                        {
+                            productSize.AvailableQuantity -= detail.Qty;
+                            _prodSizeRepo.Update(productSize);
+                        }
+                    }
+                    _prodSizeRepo.Save();
                 }
 
                 HttpContext.Session.Clear();

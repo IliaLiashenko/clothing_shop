@@ -1,47 +1,65 @@
 ﻿@model Shop_Models.ViewModels.HomeVM
 
-<div class="container">
-    <div class="text-center">
-        <button class="btn btn-dark filter-button" data-filter="all">ALL</button>
-        @foreach(var obj in Model.Categories)
-        {
-            if(obj.Name == "Unisex")
-            {
-                continue;
-            }
-            <button class="btn btn-outline-secondary filter-button" data-filter="@obj.Name.Replace(' ','_')">
-                @obj.Name
-            </button>
-        }
+@{
+    ViewData["Title"] = "Home Page";
+}
+<link rel="stylesheet" href="/css/homeIndex.css" />
+
+<div class="content">
+    <div class="first-block text-dark">
+        <div class="left-column">
+            <img src="/images/home/woman.png" alt="Woman">
+        </div>
+        <div class="right-column">
+            <h1 class="display-4">A style that<br />leaves a mark</h1>
+            <p>Enjoy shopping with us.</p>
+            <a class="btn btn-home" asp-controller="Home" asp-action="Shop">Shop now</a>
+        </div>
     </div>
-    <br />
-    <div class="row">
-        @foreach(var product in Model.Products)
-        {
-            <partial name="_IndividualProductCard" model="product" />
-            //display all products
-        }
+
+    <div class="second-block text-dark">
+        <h2 class="display-6 second-block-text">New arrivals</h2>
+
+        <div class="container">
+            <div class="row">
+                @foreach (var product in Model.Products.OrderByDescending(p => p.Id).Take(4))
+                {
+                    <partial name="_IndividualProductCard" model="product" />
+                }
+            </div>
+        </div>
+
+
+        <a class="btn btn-shop-now" asp-controller="Home" asp-action="Shop">Shop now</a>
     </div>
+
+    <div class="third-block text-dark">
+        <h2 class="display-6 third-block-text">Popular brands</h2>
+        <div class="brands-container">
+            <div class="brand-row">
+                <div class="brand"><img src="/images/home/moschinologo.png" alt="Brand 1"></div>
+                <div class="brand"><img src="/images/home/armanilogo.png" alt="Brand 2"></div>
+                <div class="brand"><img src="/images/home/bosslogo.png" alt="Brand 3"></div>
+                <div class="brand"><img src="/images/home/replaylogo.png" alt="Brand 4"></div>
+            </div>
+            <div class="brand-row">
+                <div class="brand"><img src="/images/home/rllogo.png" alt="Brand 5"></div>
+                <div class="brand"><img src="/images/home/thlogo.png" alt="Brand 6"></div>
+                <div class="brand"><img src="/images/home/cklogo.png" alt="Brand 7"></div>
+                <div class="brand"><img src="/images/home/diesellogo.png" alt="Brand 8"></div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <a class="btn btn-home" asp-controller="Home" asp-action="Shop">View all brands</a>
+        </div>
+
+        <p class="third-block-p">
+            Discover unparalleled quality and style with collections
+            from renowned global brands. Trust us in creating your unique look,
+            which will become the hallmark of your confidence and individuality.
+        </p>
+    </div>
+
 </div>
 
-
-
-@section Scripts{
-    <script>
-        $(document).ready(function () {
-
-            $(".filter-button").click(function () {
-
-                var value = $(this).attr('data-filter');
-                if (value == "all") {
-                    $('.filter').show('1000');
-                }
-                else {
-                    $('.filter.' + value + ', .filter.Unisex').show('3000');
-                    $('.filter').not('.' + value + ', .filter.Unisex').hide('3000');
-                }
-            });
-
-        });
-    </script>
-}

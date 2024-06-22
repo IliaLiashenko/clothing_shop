@@ -12,5 +12,6 @@ namespace Shop_DataAccess.Repository.IRepository
     {
         void Update(Category obj);
         Task<bool> AnyAsync(Expression<Func<Category, bool>> predicate);
+        Task<IEnumerable<Category>> GetAllAsync();
     }
 }

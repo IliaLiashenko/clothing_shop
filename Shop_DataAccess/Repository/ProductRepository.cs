@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shop_DataAccess.Repository.IRepository;
 using Shop_Models;
@@ -74,6 +75,30 @@ namespace Shop_DataAccess.Repository
             if (obj == WC.SizeName)
             {
                 return _db.Size.Select(s => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = s.Name,
+                    Value = s.Id.ToString()
+                });
+            }
+            if (obj == WC.GenderName)
+            {
+                return _db.Genders.Select(s => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = s.Name,
+                    Value = s.Id.ToString()
+                });
+            }
+            if (obj == WC.StyleName)
+            {
+                return _db.Styles.Select(s => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Text = s.Name,
+                    Value = s.Id.ToString()
+                });
+            }
+            if (obj == WC.BrandName)
+            {
+                return _db.Brands.Select(s => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
                 {
                     Text = s.Name,
                     Value = s.Id.ToString()
@@ -170,5 +195,34 @@ namespace Shop_DataAccess.Repository
 			}
 			return availableQuantities;
 		}
-	}
+
+
+        public void AddPhotoToGallery(PhotoGallery photoGallery)
+        {
+            _db.PhotoGallery.Add(photoGallery);
+        }
+
+        public async Task<IEnumerable<PhotoGallery>> GetGalleryFiles(int productId)
+        {
+            return await _db.PhotoGallery.Where(p => p.ProductId == productId).ToListAsync();
+        }
+
+
+        public async Task<PhotoGallery> GetPhotoGalleryByIdAsync(int id)
+        {
+            return await _db.PhotoGallery.FirstOrDefaultAsync(p => p.Id == id);
+        }
+        public List<PhotoGallery> GetGalleryImagesForProduct(int productId)
+        {
+            return _db.PhotoGallery
+                .Where(p => p.ProductId == productId)
+                .ToList();
+        }
+
+
+        public void RemovePhotoGallery(PhotoGallery photoGallery)
+        {
+            _db.PhotoGallery.Remove(photoGallery);
+        }
+    }
 }

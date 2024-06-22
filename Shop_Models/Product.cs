@@ -10,6 +10,7 @@ namespace Shop_Models
         public Product()
         {
             TempQty = 1;
+            DisplayOrder = 1;
         }
         public int Id { get; set; }
 
@@ -18,7 +19,7 @@ namespace Shop_Models
         
         [DisplayName("Description")]
         public string ProductDescription { get; set; }
-
+        [Range(1, int.MaxValue)]
         public double Price { get; set; }
         [ValidateNever]
         [NotMapped]
@@ -34,7 +35,7 @@ namespace Shop_Models
         [ValidateNever]
         public string Image { get; set; }
 
-
+        [ValidateNever]
         [DisplayName("Display order")]
         
         [Range(1, int.MaxValue,ErrorMessage = "Display order for product must be greater than 0")]
@@ -52,6 +53,24 @@ namespace Shop_Models
         public Size Size { get; set; }
         [NotMapped]
         public int TempQty { get; set; }
+
+        [Display(Name = "Gender")]
+        public int GenderId { get; set; }
+        [ForeignKey("GenderId")]
+        [ValidateNever]
+        public virtual Gender Gender { get; set; }
+
+        [Display(Name = "Brand")]
+        public int BrandId { get; set; }
+        [ForeignKey("BrandId")]
+        [ValidateNever]
+        public virtual Brand Brand { get; set; }
+
+        [Display(Name = "Style")]
+        public int StyleId { get; set; }
+        [ForeignKey("StyleId")]
+        [ValidateNever]
+        public virtual Style Style { get; set; }
 
     }
 }

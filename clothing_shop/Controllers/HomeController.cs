@@ -10,6 +10,7 @@ using Shop_DataAccess.Repository.IRepository;
 using Microsoft.CodeAnalysis;
 using Shop_DataAccess.Repository;
 using dotless.Core.Parser.Infrastructure;
+using NLog.Filters;
 
 namespace clothing_shop.Controllers
 {
@@ -18,15 +19,25 @@ namespace clothing_shop.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IProductRepository _prodRepo;
         private readonly ICategoryRepository _catRepo;
+        private readonly IGenderRepository _genRepo;
         private readonly ISizeRepository _sizeRepo;
         private readonly IProductSizeRepository _prodSizeRepo;
+        private readonly IColorRepository _colorRepo;
+        private readonly IBrandRepository _brandRepo;
+        private readonly IStyleRepository _styleRepo;
 
         public HomeController(ILogger<HomeController> logger, IProductRepository prodRepo, 
-            ICategoryRepository catRepo)
+            ICategoryRepository catRepo, IGenderRepository genRepo, IColorRepository colorRepo,
+            ISizeRepository sizeRepo, IBrandRepository brendRepo, IStyleRepository styleRepo)
         {
             _logger = logger;
             _prodRepo = prodRepo;
             _catRepo = catRepo;
+            _genRepo = genRepo;
+            _colorRepo = colorRepo;
+            _sizeRepo = sizeRepo;
+            _brandRepo = brendRepo; 
+            _styleRepo = styleRepo;
         }
 
 
@@ -34,16 +45,108 @@ namespace clothing_shop.Controllers
         {
             HomeVM homeVM = new HomeVM()
             {
-                Products = _prodRepo.GetAll(includeProperties:"Category"),
-                Categories = _catRepo.GetAll()
+                Products = _prodRepo.GetAll(),
+                Genders = _genRepo.GetAll()
             };
             return View(homeVM);
         }
 
-        public IActionResult Main()
+        public async Task<IActionResult> Shop(string gender, FilterVM filters)
         {
 
-            return View("Main");
+            if (!string.IsNullOrEmpty(gender))
+            {
+                var genderEntity = _genRepo.FirstOrDefault(g => g.Name == gender);
+                if (genderEntity != null)
+                {
+                    filters.SelectedGender = genderEntity.Id;
+                }
+            }
+
+            if (Request.Query["resetFilters"].Count > 0)
+            {
+                filters = new FilterVM();
+            }
+
+            var products = await _prodRepo.GetAllAsync(includeProperties: "Category,Gender,Style,Colors,Brand,ProductSizes");
+
+            if (filters.SelectedGender.HasValue)
+                products = products.Where(p => p.GenderId == filters.SelectedGender.Value || p.Gender.Name == "Unisex");
+            if (filters.SelectedStyle.HasValue)
+                products = products.Where(p => p.StyleId == filters.SelectedStyle.Value);
+            if (filters.SelectedCategory.HasValue)
+                products = products.Where(p => p.CategoryId == filters.SelectedCategory.Value);
+            if (filters.SelectedColor.HasValue)
+                products = products.Where(p => p.ColorsId == filters.SelectedColor.Value);
+            if (filters.SelectedBrand.HasValue)
+                products = products.Where(p => p.BrandId == filters.SelectedBrand.Value);
+            if (filters.SelectedSize.HasValue)
+            {
+                var sizeId = filters.SelectedSize.Value;
+                products = products.Where(p => p.ProductSizes.Any(ps => ps.SizeId == sizeId));
+            }
+
+            var actualMaxPrice = products.Any() ? products.Max(p => p.Price) : 0;
+            var actualMinPrice = products.Any() ? products.Min(p => p.Price) : 0;
+
+            if (!filters.MinPrice.HasValue)
+                filters.MinPrice = 0;
+
+            if (filters.MinPrice.HasValue && filters.MinPrice.Value < 0)
+                filters.MinPrice = 0;
+            if (filters.MaxPrice.HasValue && filters.MaxPrice.Value < actualMinPrice)
+                filters.MaxPrice = actualMinPrice;
+
+            if (filters.MinPrice.HasValue && filters.MinPrice.Value > actualMaxPrice)
+                filters.MinPrice = actualMaxPrice;
+            if (filters.MaxPrice.HasValue && filters.MaxPrice.Value > actualMaxPrice)
+                filters.MaxPrice = actualMaxPrice;
+
+            if (filters.MinPrice.HasValue)
+                products = products.Where(p => p.Price >= filters.MinPrice.Value);
+            if (filters.MaxPrice.HasValue)
+                products = products.Where(p => p.Price <= filters.MaxPrice.Value);
+
+            if (!filters.MaxPrice.HasValue || filters.MaxPrice == 0)
+            {
+                filters.MaxPrice = actualMaxPrice;
+            }
+
+
+            switch (filters.SortOrder)
+            {
+                case "az":
+                    products = products.OrderBy(p => p.ProductName);
+                    break;
+                case "za":
+                    products = products.OrderByDescending(p => p.ProductName);
+                    break;
+                case "min-max":
+                    products = products.OrderBy(p => p.Price);
+                    break;
+                case "max-min":
+                    products = products.OrderByDescending(p => p.Price);
+                    break;
+                case "newest":
+                    products = products.OrderByDescending(p => p.Id);
+                    break;
+                default:
+                    break;
+            }
+
+            var homeVM = new HomeVM
+            {
+                Products = products.ToList(),
+                Categories = await _catRepo.GetAllAsync(),
+                Genders = await _genRepo.GetAllAsync(),
+                Styles = await _styleRepo.GetAllAsync(),
+                Colors = await _colorRepo.GetAllAsync(),
+                Brands = await _brandRepo.GetAllAsync(),
+                Sizes = await _sizeRepo.GetAllAsync(),
+                Filters = filters
+            };
+
+            return View(homeVM);
         }
 
         public IActionResult Details(int Id)
@@ -56,13 +159,15 @@ namespace clothing_shop.Controllers
             }
             var sizes = _prodRepo.GetProductSizesDropdownList(Id);
             var availableQuantities = _prodRepo.GetAvailableQuantitiesForProduct(Id);
+            var galleryImages = _prodRepo.GetGalleryImagesForProduct(Id);
 
             DetailsVM DetailsVM = new DetailsVM()
             {
                 Product = _prodRepo.FirstOrDefault(u => u.Id == Id, includeProperties: "Category"),
                 ExistsInCart = shoppingCartList.Any(item => item.ProductId == Id),
                 SizeSelectList = new SelectList(sizes, "Value", "Text"),
-                AvailableQuantities = availableQuantities
+                AvailableQuantities = availableQuantities,
+                GalleryImages = galleryImages
             };
 
             return View(DetailsVM);
@@ -111,7 +216,7 @@ namespace clothing_shop.Controllers
 
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Shop));
         }
 
 
