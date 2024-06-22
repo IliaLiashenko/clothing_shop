@@ -6,12 +6,77 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        .slider-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+            .slider-container img {
+                width: 100%;
+                display: none;
+            }
+
+                .slider-container img.active {
+                    display: block;
+                }
+
+        .arrow {
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            cursor: pointer;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .arrow-left {
+            left: 50px;
+        }
+
+        .arrow-right {
+            right: 50px;
+        }
+
+        .gallery-thumbnails {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .gallery-thumbnail {
+            width: 50px;
+            height: 50px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+            .gallery-thumbnail.active {
+                border: 2px solid #000;
+            }
+
+        .return-link {
+            position: fixed;
+            top: 14%;
+            right: 14%; 
+            transform: translateX(14%); 
+            z-index: 100; 
+        }
+    </style>
 </head>
 <body>
     <form method="post">
         <input asp-for="@Model.Product.Id" hidden />
         <div class="return-link">
-            <a asp-action="Index">
+            <a asp-action="Shop">
                 <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
                     <g clip-path="url(#clip0_60_2)">
                         <rect width="19" height="19" fill="white" />
@@ -29,7 +94,22 @@
         <div class="product-container">
             
             <div class="product-image">
-                <img src="@WC.ImagePath@Model.Product.Image" width="100%">
+                <div class="slider-container">
+                    <div class="arrow arrow-left">&#10094;</div>
+                    <div class="arrow arrow-right">&#10095;</div>
+                    <img id="mainImage" src="@WC.ImagePath@Model.Product.Image" class="active" />
+                    @foreach (var image in Model.GalleryImages)
+                    {
+                        <img src="@image.Url" class="gallery-image" />
+                    }
+                </div>
+                <div class="gallery-thumbnails">
+                    <img src="@WC.ImagePath@Model.Product.Image" class="gallery-thumbnail active" data-index="0" />
+                    @for (int i = 0; i < Model.GalleryImages.Count; i++)
+                    {
+                        <img src="@Model.GalleryImages[i].Url" class="gallery-thumbnail" data-index="@((i + 1).ToString())" />
+                    }
+                </div>
             </div>
             <div class="product-description">
                 <div class="row align-center">
@@ -91,4 +171,11 @@
 
 @section Scripts {
     <script type="text/javascript" src="~/js/homeDetails.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        
+
+
+    </script>
+    
 }

@@ -31,19 +31,37 @@
             <div class="form-group">
                 <label asp-for="Product.Image" class="control-label"></label>
                 <div>
-                    @if(Model.Product.Id != 0)
+                    @if (Model.Product.Id != 0)
                     {
-                        <img src="@WC.ImagePath@Model.Product.Image" width="100%" />
+                        <img src="@WC.ImagePath@Model.Product.Image" width="75%" />
                     }
                 </div>
-                <br/>
-                <input asp-for="Product.Image" type="file" name="files" id="uploadBox" multiple data-val="false" class="form-control" />
+                <br />
+                <input asp-for="Product.Image" type="file" name="ProductImage" id="uploadBox" multiple data-val="false" class="form-control" />
             </div>
+
             <div class="form-group">
+                <label asp-for="GalleryFiles" class="control-label">Gallery Photos</label>
+                <div class="gallery-container">
+                    @foreach (var photo in Model.GalleryPhotos)
+                    {
+                        <div class="gallery-image">
+                            <img src="@photo.Url" width="100" height="100" />
+                            <span class="delete-icon" onclick="deleteGalleryImage(@photo.Id)">x</span>
+                        </div>
+                    }
+                    <div class="add-image">
+                        <input @* asp-for="GalleryFiles" *@ type="file" name="GalleryFiles" multiple class="form-control" onchange="addGalleryImage(event)" />
+                        <span class="add-icon">+</span>
+                    </div>
+                </div>
+            </div>
+
+            @* <div class="form-group">
                 <label asp-for="Product.DisplayOrder" class="control-label"></label>
                 <input asp-for="Product.DisplayOrder" class="form-control" />
                 <span asp-validation-for="Product.DisplayOrder" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <label asp-for="SelectedSizeIds" class="control-label">Select Sizes</label>
                 @if (Model.SizeSelectList != null)
@@ -79,7 +97,31 @@
                 </select>
                 <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
             </div>
-            
+
+            <div class="form-group">
+                <label asp-for="Product.BrandId" class="control-label"></label>
+                <select asp-for="Product.BrandId" asp-items="@Model.BrandSelectList" class="form-control">
+                    <option disabled selected>--Select Brand--</option>
+                </select>
+                <span asp-validation-for="Product.BrandId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Product.GenderId" class="control-label"></label>
+                <select asp-for="Product.GenderId" asp-items="@Model.GenderSelectList" class="form-control">
+                    <option disabled selected>--Select Gender--</option>
+                </select>
+                <span asp-validation-for="Product.GenderId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Product.StyleId" class="control-label"></label>
+                <select asp-for="Product.StyleId" asp-items="@Model.StyleSelectList" class="form-control">
+                    <option disabled selected>--Select Style--</option>
+                </select>
+                <span asp-validation-for="Product.StyleId" class="text-danger"></span>
+            </div>
+
             <br />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
@@ -100,7 +142,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Скрыть все поля сразу при загрузке страницы
             $('.quantity-input').hide();
 
             $('.size-checkbox').change(function () {
@@ -113,15 +154,115 @@
                     quantityInput.hide();
                 }
             });
-
-            // Показать поля для выбранных чекбоксов при загрузке страницы
             $('.size-checkbox:checked').each(function () {
                 var container = $(this).closest('.size-container');
                 var quantityInput = container.find('.quantity-input');
                 quantityInput.show();
             });
         });
+        function deleteGalleryImage(id) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                $.ajax({
+                    url: '@Url.Action("DeleteGalleryPhoto", "Products")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            $('span[onclick="deleteGalleryImage(' + id + ')"]').closest('.gallery-image').remove();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Error occurred while trying to delete the image.');
+                    }
+                });
+            }
+        }
+        function addGalleryImage(event) {
+            var files = event.target.files;
+
+            var galleryContainer = $('.gallery-container');
+
+            for (var i = 0; i < files.length; i++) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    var img = $('<img>').attr('src', e.target.result).css({
+                        width: '100px',
+                        height: '100px',
+                        objectFit: 'cover'
+                    });
+                    var deleteIcon = $('<span>').addClass('delete-icon').text('x').attr('onclick', 'deleteGalleryImage(0)');
+
+                    var galleryImage = $('<div>').addClass('gallery-image').append(img).append(deleteIcon);
+
+
+                    galleryContainer.append(galleryImage);
+
+                    var addImage = galleryContainer.find('.add-image').detach();
+                    galleryContainer.append(addImage);
+                };
+
+                reader.readAsDataURL(files[i]);
+            }
+        }
     </script>
+    <style>
+        .gallery-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .gallery-image {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+            .gallery-image img {
+                display: block;
+                width: 100px;
+                height: 100px;
+                object-fit: cover;
+            }
+
+        .delete-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 3px 5px;
+            cursor: pointer;
+        }
+
+        .add-image {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+            .add-image input[type="file"] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        .add-icon {
+            font-size: 24px;
+            color: #ccc;
+        }
+    </style>
     @* <script>
         $(document).ready(function () {
             $('.summernote').summernote({ height: 200 });

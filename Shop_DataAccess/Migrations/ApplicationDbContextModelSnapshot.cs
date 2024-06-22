@@ -229,6 +229,22 @@ namespace Shop_DataAccess.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Shop_Models.Brand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Brands");
+                });
+
             modelBuilder.Entity("Shop_Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -259,6 +275,22 @@ namespace Shop_DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Colors");
+                });
+
+            modelBuilder.Entity("Shop_Models.Gender", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Genders");
                 });
 
             modelBuilder.Entity("Shop_Models.InquiryDetail", b =>
@@ -371,6 +403,28 @@ namespace Shop_DataAccess.Migrations
                     b.ToTable("InquiryHeader");
                 });
 
+            modelBuilder.Entity("Shop_Models.PhotoGallery", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("PhotoGallery");
+                });
+
             modelBuilder.Entity("Shop_Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -379,6 +433,9 @@ namespace Shop_DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BrandId")
+                        .HasColumnType("int");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -386,6 +443,9 @@ namespace Shop_DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GenderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Image")
@@ -403,11 +463,20 @@ namespace Shop_DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("StyleId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("ColorsId");
+
+                    b.HasIndex("GenderId");
+
+                    b.HasIndex("StyleId");
 
                     b.ToTable("Product");
                 });
@@ -473,6 +542,22 @@ namespace Shop_DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Size");
+                });
+
+            modelBuilder.Entity("Shop_Models.Style", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Styles");
                 });
 
             modelBuilder.Entity("Shop_Models.ApplicationUser", b =>
@@ -573,8 +658,25 @@ namespace Shop_DataAccess.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
+            modelBuilder.Entity("Shop_Models.PhotoGallery", b =>
+                {
+                    b.HasOne("Shop_Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Shop_Models.Product", b =>
                 {
+                    b.HasOne("Shop_Models.Brand", "Brand")
+                        .WithMany()
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Shop_Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
@@ -587,9 +689,27 @@ namespace Shop_DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Shop_Models.Gender", "Gender")
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shop_Models.Style", "Style")
+                        .WithMany()
+                        .HasForeignKey("StyleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Brand");
+
                     b.Navigation("Category");
 
                     b.Navigation("Colors");
+
+                    b.Navigation("Gender");
+
+                    b.Navigation("Style");
                 });
 
             modelBuilder.Entity("Shop_Models.ProductSize", b =>

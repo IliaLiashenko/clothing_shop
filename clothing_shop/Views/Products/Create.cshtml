@@ -36,14 +36,25 @@
 
                 <div class="form-group">
                     <label asp-for="Product.Image" class="control-label"></label>
-                    <input asp-for="Product.Image" type="file" name="files" id="uploadBox" multiple class="form-control" />
+                    <input asp-for="Product.Image" type="file" name="ProductImage" id="uploadBox" multiple class="form-control" />
                     <span asp-validation-for="Product.Image" class="text-danger"></span>
                 </div>
+
                 <div class="form-group">
+                    <label asp-for="GalleryFiles" class="control-label">Gallery Photos</label>
+                    <div class="gallery-container">
+                        <div class="add-image">
+                            <input type="file" name="GalleryFiles" multiple class="form-control" onchange="addGalleryImage(event)" />
+                            <span class="add-icon">+</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* <div class="form-group">
                     <label asp-for="Product.DisplayOrder" class="control-label"></label>
                     <input asp-for="Product.DisplayOrder" class="form-control" />
                     <span asp-validation-for="Product.DisplayOrder" class="text-danger"></span>
-                </div>
+                </div> *@
 
                 <div class="form-group">
                     <label asp-for="SelectedSizeIds" class="control-label">Select Sizes</label>
@@ -77,6 +88,30 @@
                     <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                 </div>
 
+                <div class="form-group">
+                    <label asp-for="Product.BrandId" class="control-label"></label>
+                    <select asp-for="Product.BrandId" asp-items="@Model.BrandSelectList" class="form-control">
+                        <option disabled selected>--Select Brand--</option>
+                    </select>
+                    <span asp-validation-for="Product.BrandId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Product.GenderId" class="control-label"></label>
+                    <select asp-for="Product.GenderId" asp-items="@Model.GenderSelectList" class="form-control">
+                        <option disabled selected>--Select Gender--</option>
+                    </select>
+                    <span asp-validation-for="Product.GenderId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Product.StyleId" class="control-label"></label>
+                    <select asp-for="Product.StyleId" asp-items="@Model.StyleSelectList" class="form-control">
+                        <option disabled selected>--Select Style--</option>
+                    </select>
+                    <span asp-validation-for="Product.StyleId" class="text-danger"></span>
+                </div>
+
                 <br />
                 <div class="form-group">
                     <input type="submit" value="Create" class="btn btn-primary" />
@@ -94,20 +129,97 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    @{
-        <partial name ="_ValidationScriptsPartial"/>
-    }
-    @* <script>
-        $(document).ready(function () {
-            $('.summernote').summernote({height: 200});
-        });
-    </script> *@
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+            $('.quantity-input').hide();
+
             $('.size-checkbox').change(function () {
-                var quantityInput = $(this).closest('div').find('.quantity-input');
-                quantityInput.toggle(this.checked);
+                var container = $(this).closest('div');
+                var quantityInput = container.find('.quantity-input');
+
+                if ($(this).prop('checked')) {
+                    quantityInput.show();
+                } else {
+                    quantityInput.hide();
+                }
+            });
+            $('.size-checkbox:checked').each(function () {
+                var container = $(this).closest('div');
+                var quantityInput = container.find('.quantity-input');
+                quantityInput.show();
             });
         });
+
+        function addGalleryImage(event) {
+            var files = event.target.files;
+
+            var galleryContainer = $('.gallery-container');
+
+            for (var i = 0; i < files.length; i++) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    var img = $('<img>').attr('src', e.target.result).css({
+                        width: '100px',
+                        height: '100px',
+                        objectFit: 'cover'
+                    });
+                    var galleryImage = $('<div>').addClass('gallery-image').append(img);
+                    galleryContainer.append(galleryImage);
+
+                    var addImage = galleryContainer.find('.add-image').detach();
+                    galleryContainer.append(addImage);
+                };
+
+                reader.readAsDataURL(files[i]);
+            }
+        }
     </script>
+    <style>
+        .gallery-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .gallery-image {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+            .gallery-image img {
+                display: block;
+                width: 100px;
+                height: 100px;
+                object-fit: cover;
+            }
+
+        .add-image {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+            .add-image input[type="file"] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        .add-icon {
+            font-size: 24px;
+            color: #ccc;
+        }
+    </style>
 }

@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<Shop_Models.Product>
+@using Shop_Utility
 
 @{
     ViewData["Title"] = "Index";
@@ -10,62 +11,41 @@
     <a asp-action="Create">Create New</a>
 </p>
 
-@if(Model.Count() > 0){
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.ProductName)
-            </th>
-            @* <th>
-            @Html.DisplayNameFor(model => model.ProductDescription)
-            </th> *@
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            @* <th>
-            @Html.DisplayNameFor(model => model.Size)
-            </th>
-            <th>
-            @Html.DisplayNameFor(model => model.Image)
-            </th>
-            <th>
-            @Html.DisplayNameFor(model => model.DisplayOrder)
-            </th> *@
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+@if(Model.Any())
+{
+    <div class="row">
+        @foreach (var item in Model.Reverse())
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.ProductName)
-                </td>
-                @* <td>
-            @Html.DisplayFor(modelItem => item.ProductDescription)
-            </td> *@
-                <td>
-                    @Html.DisplayFor(modelItem => item.Price)
-                </td>
-                @* <td>
-            @Html.DisplayFor(modelItem => item.Size)
-            </td>
-            <td>
-            @Html.DisplayFor(modelItem => item.Image)
-            </td>
-            <td>
-            @Html.DisplayFor(modelItem => item.DisplayOrder)
-            </td> *@
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                </td>
-            </tr>
+            <div class="col-lg-3 col-md-4 pb-3 filter @item.Category.Name.Replace(' ','_')">
+                <div class="card bg-white shadow-sm">
+                    <img class="card-img-top img-fluid d-block mx-auto mb-2" src="@WC.ImagePath@item.Image" alt="Card image cap">
+                    <div class="card-body">
+                        <div class="col-12">
+                            <label class="text-center">@item.ProductName</label>
+                        </div>
+                        <div class="col-12">
+                            <p>@item.ProductDescription</p>
+                        </div>
+                        @{
+                            int priceAsInt = (int)item.Price;
+                        }
+                        <div class="col-12">
+                            <label class="price">€@priceAsInt</label>
+                        </div>
+                        <div class="col-12 p-1">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-dark form-control btn-sm p-2">Edit</a>
+                        </div>
+                        <div class="col-12 p-1">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-dark form-control btn-sm p-2">Details</a>
+                        </div>
+                        <div class="col-12 p-1">
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-dark form-control btn-sm p-2">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
 }
 else 
 {

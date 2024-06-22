@@ -16,5 +16,6 @@ namespace Shop_DataAccess.Repository.IRepository
         Task<List<Size>> ToListAsync();
         IQueryable<Size> GetAllSizes();
         Size GetById(int sizeId);
+        Task<IEnumerable<Size>> GetAllAsync();
     }
 }

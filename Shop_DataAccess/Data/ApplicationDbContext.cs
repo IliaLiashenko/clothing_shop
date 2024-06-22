@@ -20,9 +20,13 @@ namespace Shop_DataAccess
         public DbSet<InquiryHeader> InquiryHeader { get; set; }
         public DbSet<InquiryDetail> InquiryDetail { get; set; }
         public DbSet<ShoppingCart> ShoppingCart { get; set; }
+		public DbSet<Gender> Genders { get; set; }
+		public DbSet<Brand> Brands { get; set; }
+		public DbSet<Style> Styles { get; set; }
+		public DbSet<PhotoGallery> PhotoGallery { get; set; }
 
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 

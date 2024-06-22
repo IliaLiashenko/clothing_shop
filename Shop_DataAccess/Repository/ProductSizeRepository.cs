@@ -26,5 +26,14 @@ namespace Shop_DataAccess.Repository
                    .Select(ps => ps.AvailableQuantity)
                    .FirstOrDefault(); ;
         }
+        public void Update(ProductSize productSize)
+        {
+            _db.ProductSizes.Update(productSize);
+        }
+
+        public void Save()
+        {
+            _db.SaveChanges();
+        }
     }
 }

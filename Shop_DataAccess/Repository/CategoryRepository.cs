@@ -29,5 +29,10 @@ namespace Shop_DataAccess.Repository
                 objFromDb.Name = obj.Name;
             }
         }
+
+        public async Task<IEnumerable<Category>> GetAllAsync()
+        {
+            return await _db.Category.ToListAsync();
+        }
     }
 }

@@ -9,9 +9,6 @@
 }
 
 
-
-
-
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
@@ -21,28 +18,17 @@ html {
   min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
-}
-
-/*Main*/
-
-
-/*Layout*/
 .filter-button {
     margin-right: 10px; 
 }
 
 
-
-/*Return cross*/
 .return-link{
     position: absolute;
     top: 80px;
     right: 40px;
 }
 
-/*Product details*/
 .product-container {
     display: flex;
     flex-direction: row;
@@ -65,7 +51,6 @@ body {
     padding: 20px;
 }
 
-/*Card*/
 .card {
     height: 100%;
 }
@@ -83,8 +68,8 @@ body {
     }
 
         .card .card-body label {
-            font-weight: bold; /* Сделаем название жирным */
-            margin-bottom: 0.25rem; /* Уменьшил отступ после названия */
+            font-weight: bold; 
+            margin-bottom: 0.25rem; 
         }
 
         .card .card-body .col-12 {
@@ -92,13 +77,13 @@ body {
         }
 
         .card .card-body p {
-            margin-bottom: 0.5rem; /* Увеличил отступ после описания */
+            margin-bottom: 0.5rem; 
         }
 
         .card .card-body .price {
-            margin-left: 0; /* Убираем отступ слева у цены */
-            margin-right: auto; /* Выравниваем цену справа */
-            margin-bottom: 0.5rem; /* Увеличил отступ после цены */
+            margin-left: 0; 
+            margin-right: auto; 
+            margin-bottom: 0.5rem; 
         }
 
         .card .card-body .btn {
@@ -107,7 +92,6 @@ body {
 
 
 
-/*Information about product*/
 .product-details {
     background-color: #fefefe;
     padding: 2rem;
@@ -177,7 +161,6 @@ body {
         font-weight: 600;
     }
 
-/*Adaptation for mobile devices*/
 @media (max-width: 768px) {
     .product-container {
         flex-direction: column;
@@ -194,5 +177,3 @@ body {
     }
 }
 
-
-/*Create Product*/

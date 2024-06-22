@@ -22,7 +22,7 @@
 						
 					}
 
-					@for (int i = 0; i < Model.ProductList.Count(); i++)
+					@for (int i = Model.ProductList.Count() - 1; i >= 0; i--)
 					{
 						<input hidden asp-for="@Model.ProductList[i].Id" />
 						<input hidden asp-for="@Model.ProductList[i].Size" />
@@ -31,10 +31,14 @@
 						
 						<div class="row">
 							<div class="col-md-4">
-								<img src="@WC.ImagePath@Model.ProductList[i].Image" class="rounded mx-auto d-block" style="width: 55%; height: auto;" alt="Product Image" />
+								<a asp-action="Details" asp-controller="Home" asp-route-id="@Model.ProductList[i].Id">
+									<img src="@WC.ImagePath@Model.ProductList[i].Image" class="rounded mx-auto d-block" style="width: 55%; height: auto;" alt="Product Image" />
+								</a>
 							</div>
 							<div class="col-md-4">
-								<h4>@Model.ProductList[i].ProductName</h4>
+								<a asp-action="Details" asp-controller="Home" asp-route-id="@Model.ProductList[i].Id" class="text-dark text-decoration-none">
+									<h4>@Model.ProductList[i].ProductName</h4>
+								</a>
 								<p>@Model.ProductList[i].ProductDescription</p>
 								<p><strong>Price:</strong> €@Model.ProductList[i].Price</p>
 								<p><strong>Size:</strong> @Model.ProductList[i].Size.Name</p>
@@ -61,7 +65,7 @@
 								<br /><br />
 								<div class="col-md-4">
 									<a asp-action="Remove" asp-route-productId="@Model.ProductList[i].Id" asp-route-sizeId="@Model.ProductList[i].Size.Id" class="btn btn-danger btn-sm">
-										<i class="fas fa-trash-alt"></i> Delete
+										Delete from Cart
 									</a>
 								</div>
 								<br />
@@ -83,7 +87,7 @@
 					<div class="row justify-content-end">
 
 						<div class="col-6 col-md-3">
-							<p><strong>Order Total:</strong> <span id="orderTotal">€@Model.ProductList.Sum(p => p.Price * p.TempQty)</span></p>
+							<p><strong>Order Total:</strong><span id="orderTotal">€@Model.ProductList.Sum(p => p.Price * p.TempQty)</span></p>
 							<div class="row">
 								<div class="col-6">
 									<button type="submit" class="btn btn-dark form-control ">

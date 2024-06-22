@@ -1,4 +1,6 @@
-﻿using Shop_Models;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Shop_Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,5 +32,13 @@ namespace Shop_DataAccess.Repository.IRepository
 
         Dictionary<int, int> GetAvailableQuantitiesForProductAndSize(int productId, int sizeId);
 
-	}
+        void AddPhotoToGallery(PhotoGallery photoGallery);
+
+        Task<IEnumerable<PhotoGallery>> GetGalleryFiles(int productId);
+
+        Task<PhotoGallery> GetPhotoGalleryByIdAsync(int id);
+        List<PhotoGallery> GetGalleryImagesForProduct(int productId);
+
+        void RemovePhotoGallery(PhotoGallery photoGallery);
+    }
 }
