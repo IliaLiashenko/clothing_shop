@@ -363,18 +363,3 @@ MigrationBackup/
 FodyWeavers.xsd
 
 
-
-
-# appsettings - exclude sensitive configs
-appsettings.json
-appsettings.*.json
-
-# Local startup environment variables
-Properties/launchSettings.json
-
-# Secrets file (if Secret Manager is used)
-secrets.json
-
-
-clothing_shop/appsettings.json
-
