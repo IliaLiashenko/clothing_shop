@@ -265,7 +265,7 @@ namespace clothing_shop.Controllers
             }
 
 
-            var domain = "https://localhost:44333/";
+            var domain = "https://localhost:7061/";
             var options = new Stripe.Checkout.SessionCreateOptions
             {
                 SuccessUrl = domain + $"Cart/InquiryConfirmation?id={inquiryHeader.Id}",
