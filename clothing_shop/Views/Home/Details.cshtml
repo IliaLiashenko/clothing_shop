@@ -8,67 +8,67 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <style>
         .slider-container {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
         }
 
-            .slider-container img {
-                width: 100%;
-                display: none;
-            }
+        .slider-container img {
+        width: 100%;
+        display: none;
+        }
 
-                .slider-container img.active {
-                    display: block;
-                }
+        .slider-container img.active {
+        display: block;
+        }
 
         .arrow {
-            position: absolute;
-            top: 50%;
-            width: 30px;
-            height: 30px;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            text-align: center;
-            line-height: 30px;
-            cursor: pointer;
-            transform: translateY(-50%);
-            z-index: 1;
+        position: absolute;
+        top: 50%;
+        width: 30px;
+        height: 30px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        text-align: center;
+        line-height: 30px;
+        cursor: pointer;
+        transform: translateY(-50%);
+        z-index: 1;
         }
 
         .arrow-left {
-            left: 50px;
+        left: 50px;
         }
 
         .arrow-right {
-            right: 50px;
+        right: 50px;
         }
 
         .gallery-thumbnails {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
         }
 
         .gallery-thumbnail {
-            width: 50px;
-            height: 50px;
-            margin: 0 5px;
-            cursor: pointer;
+        width: 50px;
+        height: 50px;
+        margin: 0 5px;
+        cursor: pointer;
         }
 
-            .gallery-thumbnail.active {
-                border: 2px solid #000;
-            }
+        .gallery-thumbnail.active {
+        border: 2px solid #000;
+        }
 
         .return-link {
-            position: fixed;
-            top: 14%;
-            right: 14%; 
-            transform: translateX(14%); 
-            z-index: 100; 
+        position: fixed;
+        top: 14%;
+        right: 14%; 
+        transform: translateX(14%); 
+        z-index: 100; 
         }
     </style>
 </head>
@@ -92,7 +92,7 @@
             </a>
         </div>
         <div class="product-container">
-            
+
             <div class="product-image">
                 <div class="slider-container">
                     <div class="arrow arrow-left">&#10094;</div>
@@ -118,7 +118,7 @@
                         <p class="product-description">@Model.Product.ProductDescription</p>
 
                         <div class="product-details-add-to-cart">
-                            
+
                             @{
                                 int priceAsInt = (int)Model.Product.Price;
                                 int availableQty = 0;
@@ -131,14 +131,17 @@
                                     {
                                         int sizeId = Convert.ToInt32(size.Value);
                                         availableQty = Model.AvailableQuantities.ContainsKey(sizeId) ? Model.AvailableQuantities[sizeId] : 0;
-
-                                        <option value="@size.Value" data-available-qty="@availableQty">
-                                            @size.Text
-                                            @if (availableQty <= 10)
-                                            {
-                                                <span>(only @availableQty left in stock)</span>
-                                            }
-                                        </option>
+                                        if (availableQty > 0)
+                                        {
+                                            <option value="@size.Value" data-available-qty="@availableQty">
+                                                @size.Text
+                                                @if (availableQty <= 10)
+                                                {
+                                                    <span>(only @availableQty left in stock)</span>
+                                                }
+                                            </option>
+                                        }
+                                        
                                     }
                                 </select>
                                 <br />
