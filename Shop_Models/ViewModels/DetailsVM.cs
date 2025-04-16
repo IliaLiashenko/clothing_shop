@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace Shop_Models.ViewModels
@@ -20,5 +19,8 @@ namespace Shop_Models.ViewModels
         public Dictionary<int, int> AvailableQuantities { get; set; }
 
         public List<PhotoGallery> GalleryImages { get; set; }
+
+        public ShoppingCart ShoppingCart { get; set; }
+
     }
 }

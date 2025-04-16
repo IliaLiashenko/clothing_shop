@@ -10,12 +10,14 @@ using Shop_DataAccess.Repository.IRepository;
 using Microsoft.CodeAnalysis;
 using Shop_DataAccess.Repository;
 using NLog.Filters;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.VisualBasic;
 
 namespace clothing_shop.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+
         private readonly IProductRepository _prodRepo;
         private readonly ICategoryRepository _catRepo;
         private readonly IGenderRepository _genRepo;
@@ -25,11 +27,10 @@ namespace clothing_shop.Controllers
         private readonly IBrandRepository _brandRepo;
         private readonly IStyleRepository _styleRepo;
 
-        public HomeController(ILogger<HomeController> logger, IProductRepository prodRepo, 
+        public HomeController(IProductRepository prodRepo, 
             ICategoryRepository catRepo, IGenderRepository genRepo, IColorRepository colorRepo,
             ISizeRepository sizeRepo, IBrandRepository brendRepo, IStyleRepository styleRepo)
         {
-            _logger = logger;
             _prodRepo = prodRepo;
             _catRepo = catRepo;
             _genRepo = genRepo;
@@ -39,7 +40,7 @@ namespace clothing_shop.Controllers
             _styleRepo = styleRepo;
         }
 
-
+        //Displays home page of the shop
         public IActionResult Index()
         {
             HomeVM homeVM = new HomeVM()
@@ -50,9 +51,10 @@ namespace clothing_shop.Controllers
             return View(homeVM);
         }
 
+        //Displays shop page with filters
         public async Task<IActionResult> Shop(string gender, FilterVM filters)
         {
-
+            //Product filtering
             if (!string.IsNullOrEmpty(gender))
             {
                 var genderEntity = _genRepo.FirstOrDefault(g => g.Name == gender);
@@ -112,6 +114,7 @@ namespace clothing_shop.Controllers
             }
 
 
+            //Product sorting
             switch (filters.SortOrder)
             {
                 case "az":
@@ -133,6 +136,7 @@ namespace clothing_shop.Controllers
                     break;
             }
 
+            //Uses repositories for getting product and filter data
             var homeVM = new HomeVM
             {
                 Products = products.ToList(),
@@ -145,9 +149,12 @@ namespace clothing_shop.Controllers
                 Filters = filters
             };
 
+            // Returns a view with filtered products
             return View(homeVM);
         }
 
+
+        //Displays details of a specific product
         public IActionResult Details(int Id)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
@@ -160,6 +167,7 @@ namespace clothing_shop.Controllers
             var availableQuantities = _prodRepo.GetAvailableQuantitiesForProduct(Id);
             var galleryImages = _prodRepo.GetGalleryImagesForProduct(Id);
 
+            //Gets product information by Id and additional data
             DetailsVM DetailsVM = new DetailsVM()
             {
                 Product = _prodRepo.FirstOrDefault(u => u.Id == Id, includeProperties: "Category"),
@@ -172,7 +180,7 @@ namespace clothing_shop.Controllers
             return View(DetailsVM);
         }
 
-
+        //Adds product to the cart
         [HttpPost, ActionName("Details")]
         public IActionResult DetailsPost(int id, DetailsVM detailsVM)
         {
@@ -186,19 +194,20 @@ namespace clothing_shop.Controllers
 
             }
 
-            var availableQty = _prodRepo.GetAvailableQuantitiesForProduct(id)
-        .GetValueOrDefault(detailsVM.Size.Id, 0);
 
-            if (detailsVM.Product.TempQty > availableQty)
+            var availableQty = _prodRepo.GetAvailableQuantitiesForProduct(id)
+                .GetValueOrDefault(detailsVM.Size.Id, 0);
+
+            if (detailsVM.ShoppingCart.Qty > availableQty)
             {
-                detailsVM.Product.TempQty = availableQty;
+                detailsVM.ShoppingCart.Qty = availableQty;
             }
 
             var existingItem = shoppingCartList.FirstOrDefault(item => item.ProductId == id && item.SizeId == detailsVM.Size.Id);
 
             if (existingItem != null)
             {
-                var newQty = existingItem.Qty + detailsVM.Product.TempQty;
+                var newQty = existingItem.Qty + detailsVM.ShoppingCart.Qty;
                 if (newQty > availableQty)
                 {
                     existingItem.Qty = availableQty;
@@ -210,7 +219,7 @@ namespace clothing_shop.Controllers
             }
             else
             {
-                shoppingCartList.Add(new ShoppingCart { ProductId = id, SizeId = detailsVM.Size.Id, Qty = detailsVM.Product.TempQty });
+                shoppingCartList.Add(new ShoppingCart { ProductId = id, SizeId = detailsVM.Size.Id, Qty = detailsVM.ShoppingCart.Qty });
             }
 
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);

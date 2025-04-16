@@ -146,13 +146,13 @@
                                 </select>
                                 <br />
                                 <span>Qty:</span> 
-                                <select asp-for="Product.TempQty" class="qty">
+                                <select asp-for="ShoppingCart.Qty" class="qty">
                                     @for (int i = 1; i <= 10; i++)
                                     {
                                         <option value="@i">@i</option>
                                     }
                                 </select>
-                                <span asp-validation-for="@Model.Product.TempQty" class="text-danger"></span>
+                                <span asp-validation-for="@Model.ShoppingCart.Qty" class="text-danger"></span>
                                 <span class="error-message text-danger"></span>
                             </div>
                             <br />

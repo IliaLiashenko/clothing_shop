@@ -28,6 +28,8 @@
 						<input hidden asp-for="@Model.ProductList[i].Size" />
 						<input hidden asp-for="@Model.ProductList[i].Size.Id" />
 						<input hidden asp-for="@Model.ProductList[i].Size.Name" />
+						<input hidden asp-for="@Model.ShoppingCartList[i].ProductId" />
+						<input hidden asp-for="@Model.ShoppingCartList[i].SizeId" />
 						
 						<div class="row">
 							<div class="col-md-4">
@@ -53,7 +55,7 @@
 									// }
 								}
 								<p><strong>Qty:</strong>
-									<select asp-for="@Model.ProductList[i].TempQty" class="qty" 
+									<select asp-for="@Model.ShoppingCartList[i].Qty" class="qty"
 									id="qty-@Model.ProductList[i].Id" data-price="@Model.ProductList[i].Price" data-max-qty="@availableQty">
 										@for (int j = 1; j <= (availableQty >= 10 ? 10 : availableQty); j++)
 										{
@@ -72,11 +74,11 @@
 							</div>
 							<div class="col-md-4">
 								<div class="text-right">
-									<p id="totalPrice-@Model.ProductList[i].Id" data-price="@Model.ProductList[i].Price">€@(@Model.ProductList[i].Price * @Model.ProductList[i].TempQty)</p>
+									<p id="totalPrice-@Model.ProductList[i].Id" data-price="@Model.ProductList[i].Price">€@(@Model.ProductList[i].Price * @Model.ShoppingCartList[i].Qty)</p>
 								</div>
 							</div>
 						</div>
-						orderTotal += @Model.ProductList[i].Price * @Model.ProductList[i].TempQty;
+						orderTotal += @Model.ProductList[i].Price * @Model.ShoppingCartList[i].Qty;
 						<br />
 						<hr />
 
@@ -87,7 +89,7 @@
 					<div class="row justify-content-end">
 
 						<div class="col-6 col-md-3">
-							<p><strong>Order Total:</strong><span id="orderTotal">€@Model.ProductList.Sum(p => p.Price * p.TempQty)</span></p>
+							<p><strong>Order Total:</strong><span id="orderTotal">€@Model.ProductList.Select((p, i) => p.Price * Model.ShoppingCartList[i].Qty).Sum()</span></p>
 							<div class="row">
 								<div class="col-6">
 									<button type="submit" class="btn btn-dark form-control ">

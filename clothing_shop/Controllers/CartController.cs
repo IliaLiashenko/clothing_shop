@@ -55,31 +55,31 @@ namespace clothing_shop.Controllers
             IEnumerable<Product> prodListTemp = _prodRepo.GetAll(u => prodInCart.Contains(u.Id));
             IList<Product> prodList = new List<Product>();
 
-			ProductUserVM productUserVM = new ProductUserVM
-			{
-				ProductList = new List<Product>(),
-				AvailableQuantities = new Dictionary<int, Dictionary<int, int>>()
-			};
+            ProductUserVM productUserVM = new ProductUserVM
+            {
+                ProductList = new List<Product>(),
+                AvailableQuantities = new Dictionary<int, Dictionary<int, int>>()
+            };
 
-			foreach (var cartObj in shoppingCartList)
-			{
-				Product prodTemp = CloneProduct(prodListTemp.FirstOrDefault(u => u.Id == cartObj.ProductId));
+            foreach (var cartObj in shoppingCartList)
+            {
+                Product prodTemp = CloneProduct(prodListTemp.FirstOrDefault(u => u.Id == cartObj.ProductId));
 
-				prodTemp.TempQty = cartObj.Qty;
-				prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
-				prodList.Add(prodTemp);
+                prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
+                prodList.Add(prodTemp);
 
-				int availableQty = _prodRepo.GetAvailableQuantitiesForProductAndSize(cartObj.ProductId, cartObj.SizeId)[cartObj.SizeId];
-				if (!productUserVM.AvailableQuantities.ContainsKey(cartObj.ProductId))
-				{
-					productUserVM.AvailableQuantities[cartObj.ProductId] = new Dictionary<int, int>();
-				}
-				productUserVM.AvailableQuantities[cartObj.ProductId][cartObj.SizeId] = availableQty;
-			}
+                int availableQty = _prodRepo.GetAvailableQuantitiesForProductAndSize(cartObj.ProductId, cartObj.SizeId)[cartObj.SizeId];
+                if (!productUserVM.AvailableQuantities.ContainsKey(cartObj.ProductId))
+                {
+                    productUserVM.AvailableQuantities[cartObj.ProductId] = new Dictionary<int, int>();
+                }
+                productUserVM.AvailableQuantities[cartObj.ProductId][cartObj.SizeId] = availableQty;
+            }
 
-			productUserVM.ProductList = prodList;
+            productUserVM.ProductList = prodList;
+            productUserVM.ShoppingCartList = shoppingCartList;
 
-			return View(productUserVM);
+            return View(productUserVM);
         }
 
         private Product CloneProduct(Product original)
@@ -93,8 +93,7 @@ namespace clothing_shop.Controllers
                 ColorsId = original.ColorsId,
                 Image = original.Image,
                 DisplayOrder = original.DisplayOrder,
-                CategoryId = original.CategoryId,
-                TempQty = original.TempQty,
+                CategoryId = original.CategoryId
             };
         }
 
@@ -103,14 +102,12 @@ namespace clothing_shop.Controllers
         [ActionName("Index")]
         public IActionResult IndexPost(ProductUserVM productUserVM)
         {
-			List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-			foreach (var prod in productUserVM.ProductList)
-			{
-				shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Qty = prod.TempQty, SizeId = prod.Size.Id });
-			}
+            if (productUserVM.ShoppingCartList != null && productUserVM.ShoppingCartList.Any())
+            {
+                HttpContext.Session.Set(WC.SessionCart, productUserVM.ShoppingCartList);
+            }
 
-			HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
-			return RedirectToAction(nameof(Summary));
+            return RedirectToAction(nameof(Summary));
         }
 
 
@@ -160,17 +157,27 @@ namespace clothing_shop.Controllers
 
             ProductUserVM = new ProductUserVM()
             {
-                ApplicationUser = applicationUser
+                ApplicationUser = applicationUser,
+                ProductList = new List<Product>(),
+                ShoppingCartList = new List<ShoppingCart>()
             };
 
             foreach(var cartObj in shoppingCartList)
             {
-				Product prodTemp = _prodRepo.FirstOrDefault(u => u.Id == cartObj.ProductId);
-				prodTemp.TempQty = cartObj.Qty;
-				prodTemp.Size = _sizeRepo.GetById(cartObj.SizeId);
+                Product prodTemp = _prodRepo.FirstOrDefault(u => u.Id == cartObj.ProductId);
+                Size sizeTemp = _sizeRepo.GetById(cartObj.SizeId);
+
+                prodTemp.Size = sizeTemp;
 
                 ProductUserVM.ProductList.Add(prodTemp);
-			}
+                ProductUserVM.ShoppingCartList.Add(new ShoppingCart
+                {
+                    ProductId = cartObj.ProductId,
+                    SizeId = cartObj.SizeId,
+                    Qty = cartObj.Qty
+                });
+
+            }
 
             return View(ProductUserVM);
         }
@@ -199,10 +206,20 @@ namespace clothing_shop.Controllers
             //Phone: {2}
             //Products: {3}
 
-            foreach (var cart in ProductUserVM.ProductList)
+            ProductUserVM.InquiryHeader.OrderTotal = 0;
+
+            foreach (var cartItem in ProductUserVM.ShoppingCartList)
             {
-                ProductUserVM.InquiryHeader.OrderTotal += (cart.Price * cart.TempQty);
+                var product = ProductUserVM.ProductList
+                    .FirstOrDefault(p => p.Id == cartItem.ProductId && p.Size?.Id == cartItem.SizeId);
+
+                if (product != null)
+                {
+                    ProductUserVM.InquiryHeader.OrderTotal += product.Price * cartItem.Qty;
+                }
             }
+
+
 
             StringBuilder productListSB = new StringBuilder();
             foreach (var prod in ProductUserVM.ProductList)
@@ -276,21 +293,29 @@ namespace clothing_shop.Controllers
 
             foreach (var item in ProductUserVM.ProductList)
             {
-                var sessionLineItem = new SessionLineItemOptions
+                var cartItem = ProductUserVM.ShoppingCartList.FirstOrDefault(c =>
+                    c.ProductId == item.Id && c.SizeId == item.Size?.Id);
+
+                if (cartItem != null)
                 {
-                    PriceData = new SessionLineItemPriceDataOptions
+                    var sessionLineItem = new SessionLineItemOptions
                     {
-                        UnitAmount = (long)(item.Price * 100), //20.50 => 2050
-                        Currency = "eur",
-                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        PriceData = new SessionLineItemPriceDataOptions
                         {
-                            Name = item.ProductName
-                        }
-                    },
-                    Quantity = item.TempQty
-                };
-                options.LineItems.Add(sessionLineItem);
+                            UnitAmount = (long)(item.Price * 100), // Example: 20.50 => 2050
+                            Currency = "eur",
+                            ProductData = new SessionLineItemPriceDataProductDataOptions
+                            {
+                                Name = $"{item.ProductName} (Size: {item.Size?.Name})"
+                            }
+                        },
+                        Quantity = cartItem.Qty
+                    };
+
+                    options.LineItems.Add(sessionLineItem);
+                }
             }
+
 
             var service = new Stripe.Checkout.SessionService();
             Session session = service.Create(options);
@@ -365,17 +390,18 @@ namespace clothing_shop.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-		public IActionResult UpdateCart(IEnumerable<Product> ProdList)
+        public IActionResult UpdateCart(List<ShoppingCart> cartUpdates)
         {
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            foreach (Product prod in ProdList)
+            if (cartUpdates == null || !cartUpdates.Any())
             {
-				shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Qty = prod.TempQty, SizeId = prod.Size.Id});
+                return Json(new { success = false, message = "Empty cart update." });
             }
 
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
-			return Json(new { success = true });
-		}
+            // Обновляем сессию новой версией корзины
+            HttpContext.Session.Set(WC.SessionCart, cartUpdates);
+
+            return Json(new { success = true });
+        }
 
 
 

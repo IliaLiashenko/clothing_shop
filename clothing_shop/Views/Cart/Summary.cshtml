@@ -95,20 +95,30 @@
                                         @{var orderTotal = 0.0;}
                                         @for(int i = 0; i < Model.ProductList.Count(); i++)
                                         {
-                                            <input type="hidden" asp-for="@Model.ProductList[i].Id" />
-                                            <input type="hidden" asp-for="@Model.ProductList[i].ProductName" />
-                                            <input type="hidden" asp-for="@Model.ProductList[i].Price" />
-                                            <input type="hidden" asp-for="@Model.ProductList[i].Size" />
-                                            <input type="hidden" asp-for="@Model.ProductList[i].TempQty" />
+                                            var product = Model.ProductList[i];
+                                            var cartItem = Model.ShoppingCartList.FirstOrDefault(x => x.ProductId == product.Id && x.SizeId == product.Size.Id);
+                                            var qty = cartItem?.Qty ?? 0;
+
+                                            <input type="hidden" name="ProductList[@i].Id" value="@product.Id" />
+                                            <input type="hidden" name="ProductList[@i].ProductName" value="@product.ProductName" />
+                                            <input type="hidden" name="ProductList[@i].Price" value="@product.Price" />
+                                            <input type="hidden" name="ProductList[@i].Size.Id" value="@product.Size.Id" />
+                                            <input type="hidden" name="ProductList[@i].Size.Name" value="@product.Size.Name" />
+
+                                            <input type="hidden" name="ShoppingCartList[@i].ProductId" value="@cartItem?.ProductId" />
+                                            <input type="hidden" name="ShoppingCartList[@i].SizeId" value="@cartItem?.SizeId" />
+                                            <input type="hidden" name="ShoppingCartList[@i].Qty" value="@qty" />
+
                                             <li class="list-group-item d-flex justify-content-between">
                                                 <div>
-                                                    <h6 class="my-0">@Model.ProductList[i].ProductName</h6>
-                                                    <small class="text-muted">Size: @Model.ProductList[i].Size.Name</small>&nbsp;&nbsp;
-                                                    <small class="text-muted">Qty: @Model.ProductList[i].TempQty</small>&nbsp;&nbsp;
-                                                    <small class="text-muted">Price: €@(Model.ProductList[i].Price * Model.ProductList[i].TempQty)</small>
+                                                    <h6 class="my-0">@product.ProductName</h6>
+                                                    <small class="text-muted">Size: @product.Size?.Name</small>&nbsp;&nbsp;
+                                                    <small class="text-muted">Qty: @qty</small>&nbsp;&nbsp;
+                                                    <small class="text-muted">Price: €@(product.Price * qty)</small>
                                                 </div>
                                             </li>
-                                            orderTotal += Model.ProductList[i].Price * Model.ProductList[i].TempQty;
+
+                                            orderTotal += product.Price * qty;
                                         }
                                         <li class="list-group-item d-flex justify-content-between bg-light">
                                             <small class="text-dark"> Total (EUR)</small>

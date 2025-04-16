@@ -9,7 +9,6 @@ namespace Shop_Models
     {
         public Product()
         {
-            TempQty = 1;
             DisplayOrder = 1;
         }
         public int Id { get; set; }
@@ -51,8 +50,6 @@ namespace Shop_Models
         [NotMapped]
         [ValidateNever]
         public Size Size { get; set; }
-        [NotMapped]
-        public int TempQty { get; set; }
 
         [Display(Name = "Gender")]
         public int GenderId { get; set; }
