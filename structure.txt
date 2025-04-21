@@ -1,0 +1,122 @@
+clothing_shop
+|   
+|   
+|
++---clothing_shop
+|   |   appsettings.Development.json
+|   |   appsettings.json
+|   |   clothing_shop.csproj
+|   |   clothing_shop.csproj.user
+|   |   Program.cs
+|   |   
+|   +---Areas
+|   |   \---Identity
+|   |
+|   |                   
+|   +---Controllers
+|   |       BrandsController.cs
+|   |       CartController.cs
+|   |       CategoriesController.cs
+|   |       ColorsController.cs
+|   |       GendersController.cs
+|   |       HomeController.cs
+|   |       InquiryController.cs
+|   |       ProductsController.cs
+|   |       SizesController.cs
+|   |       StylesController.cs
+|   |       
+|   |                   
+|   +---Properties
+|   |       launchSettings.json
+|   |       serviceDependencies.json
+|   |       serviceDependencies.local.json
+|   |       serviceDependencies.local.json.user
+|   |       
+|   +---Views
+|   |   |   _ViewImports.cshtml
+|   |   |   _ViewStart.cshtml
+|   |   |   Brands
+|   |   |   Cart
+|   |   |   Categories
+|   |   |   Colors
+|   |   |   Genders
+|   |   |   Home
+|   |   |   Inquiry
+|   |   |   Products
+|   |   |   Shared
+|   |   |   Sizes
+|   |   |       
+|   |   \---Styles
+|   |           
+|   \---wwwroot
+|               
++---Shop_DataAccess
+|   |   Shop_DataAccess.csproj
+|   |   
+|   +---Data
+|   |       ApplicationDbContext.cs
+|   |       
+|   |   Migrations
+|   |       
+|   \---Repository
+|       |   ApplicationUserRepository.cs
+|       |   BrandRepository.cs
+|       |   CategoryRepository.cs
+|       |   ColorRepository.cs
+|       |   GenderRepository.cs
+|       |   InquiryDetailRepository.cs
+|       |   InquiryHeaderRepository.cs
+|       |   ProductRepository.cs
+|       |   ProductSizeRepository.cs
+|       |   Repository.cs
+|       |   ShoppingCartRepository.cs
+|       |   SizeRepository.cs
+|       |   StyleRepository.cs
+|       |   
+|       \---IRepository
+|               IApplicationUserRepository.cs
+|               IBrandRepository.cs
+|               ICategoryRepository.cs
+|               IColorRepository.cs
+|               IGenderRepository.cs
+|               IInquiryDetailRepository.cs
+|               IInquiryHeaderRepository.cs
+|               IProductRepository.cs
+|               IProductSizeRepository.cs
+|               IRepository.cs
+|               IShoppingCartRepository.cs
+|               ISizeRepository.cs
+|               IStyleRepository.cs
+|               
++---Shop_Models
+|   |   ApplicationUser.cs
+|   |   Brand.cs
+|   |   Category.cs
+|   |   Colors.cs
+|   |   ErrorViewModel.cs
+|   |   Gender.cs
+|   |   InquiryDetail.cs
+|   |   InquiryHeader.cs
+|   |   PhotoGallery.cs
+|   |   Product.cs
+|   |   ProductSize.cs
+|   |   ShoppingCart.cs
+|   |   Shop_Models.csproj
+|   |   Size.cs
+|   |   Style.cs
+|   |   
+|   \---ViewModels
+|           DetailsVM.cs
+|           FilterVM.cs
+|           HomeVM.cs
+|           InquiryVM.cs
+|           ProductUserVM.cs
+|           ProductVM.cs
+|           
+\---Shop_Utility
+    |   EmailSender.cs
+    |   SessionExtensions.cs
+    |   Shop_Utility.csproj
+    |   StripeSettings.cs
+    \---WC.cs
+
