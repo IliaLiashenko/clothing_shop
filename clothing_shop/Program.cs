@@ -1,3 +1,4 @@
+using DotNetEnv;
 using Shop_DataAccess;
 using Shop_Utility;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,14 @@ using Stripe;
 
 
 var builder = WebApplication.CreateBuilder(args);
+if (!builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
+
+
+Env.Load();
+
 
 
 // Add services to the container.
@@ -88,6 +97,9 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -102,7 +114,14 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
+if (!builder.Environment.IsDevelopment())
+{
+    StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+}
+else
+{
+    StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
+}
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,0 +1,61 @@
+services:
+  clothing_shop:
+    image: ${DOCKER_REGISTRY-}clothingshop
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: clothing_shop/Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ClothingShop;User Id=sa;Password=StrongP@ss123;TrustServerCertificate=True;
+    env_file:
+      - .env
+    depends_on:
+      - sqlserver
+    networks:
+      - shopnet
+
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlserver
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "StrongP@ss123"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./docker_data:/docker_data:ro
+    networks:
+      - shopnet
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "StrongP@ss123", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    command: 
+      - /bin/bash
+      - -c 
+      - |
+        /opt/mssql/bin/sqlservr &
+        sleep 15
+        if [ -f "/docker_data/ClothingShop.sql" ]; then
+          echo "Found SQL script, executing..."
+          /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P StrongP@ss123 -d master -i /docker_data/ClothingShop.sql
+        else
+          echo "SQL script not found at /docker_data/ClothingShop.sql"
+          ls -la /docker_data/
+        fi
+        tail -f /dev/null
+
+
+volumes:
+  sqlserver_data:
+
+networks:
+  shopnet:

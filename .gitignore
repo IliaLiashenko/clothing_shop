@@ -363,3 +363,25 @@ MigrationBackup/
 FodyWeavers.xsd
 
 
+# Build output
+bin/
+obj/
+publish/
+
+# User secrets & environment
+.env
+
+# Docker volume data
+docker_data/
+
+# VS Code / Rider / Visual Studio settings
+.vscode/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# System
+.DS_Store
+Thumbs.db
