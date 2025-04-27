@@ -3,7 +3,7 @@ This project was a **diploma project** for my college course, showcasing my skil
 
 The project is containerized using **Docker** and can be easily run locally or deployed to production. The code is organized in an MVC architecture, making it scalable and maintainable for future updates.
 
-You can view a short presentation with store interface screenshots and brief explanations [here](prasantation.pdf).
+You can view a short presentation with store interface screenshots and brief explanations [here](presentation.pdf).
 
 <p>&nbsp;</p>
 
